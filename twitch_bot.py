@@ -19,6 +19,8 @@ class TwitchBot:
         self.writer = None
         self.riot = None
         self.db = Database()
+        self.count = 1
+        self.previous_message = ""
 
     async def connect(self):
         # https://docs.python.org/3/library/ssl.html#ssl-security
@@ -45,6 +47,9 @@ class TwitchBot:
     def send(self, user, twitch_channel, message):
         self._send(f"PRIVMSG {twitch_channel} :@{user}, {message}")
 
+    def send_without_mention(self, twitch_channel, message):
+        self._send(f"PRIVMSG {twitch_channel} :{message}")
+
     async def listen(self):
         async with aiohttp.ClientSession() as session:
             self.riot = RiotClient(session)
@@ -68,11 +73,16 @@ class TwitchBot:
     async def handle_command(self, message):
         user = message.split("!", 1)[0][1:]
         content = message.split(":", 2)[2]
+        # Processing
+        content = content.removesuffix("  󠀀") # 7tv send twice hack
+        content = content.removesuffix(" 󠀀")
+        content = content.strip()
 
+        # FIXME
         if content.startswith("!runes"):
             result = await self.runes()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
-        elif is_admin(user):
+        elif is_admin(user) and content.startswith("!"):
             if content.startswith("!add"):
                 name, tag = content.removeprefix("!add ").split("#")
                 result = await self.add_account(name, tag)
@@ -84,6 +94,18 @@ class TwitchBot:
             elif content.startswith("!accounts"):
                 result = await self.accounts()
                 self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+        else:
+            # Hack - join emote walls
+            if content.strip() == self.previous_message:
+                self.count += 1
+            else:
+                self.count = 1
+                if content.startswith("!"):
+                    self.previous_message = ""
+                else:
+                    self.previous_message = content.strip()
+        if self.count == 4:
+            self.send_without_mention(os.getenv('TWITCH_CHANNEL'), self.previous_message)
 
     # Move to own module
     async def runes(self):
