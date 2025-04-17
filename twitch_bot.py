@@ -93,6 +93,9 @@ class TwitchBot:
             elif content.startswith("!accounts"):
                 result = await self.accounts()
                 self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+            elif content.startswith("!restart"):
+                self.send(user, os.getenv('TWITCH_CHANNEL'), "Restarting...")
+                exit(0)
 
     # Move to own module
     async def runes(self):
