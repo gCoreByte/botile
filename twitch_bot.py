@@ -3,10 +3,12 @@ import ssl
 import aiohttp
 import asyncio
 from riot_client import RiotClient
+from lolpros_api import LolprosApi
 from db import Database, Account
 
 ADMIN_USERS = ["reptile9lol", "gcorebyte", "k1mbo9lol"]
 
+NOT_IN_GAME = "Reptile is currently not in game"
 
 def is_admin(user: str):
     # This should probably check if the user is a mod too
@@ -18,6 +20,7 @@ class TwitchBot:
         self.reader = None
         self.writer = None
         self.riot = None
+        self.lolpros = None
         self.db = Database()
         self.count = 1
         self.previous_message = ""
@@ -53,6 +56,7 @@ class TwitchBot:
     async def listen(self):
         async with aiohttp.ClientSession() as session:
             self.riot = RiotClient(session)
+            self.lolpros = LolprosApi(session)
             while True:
                 line = await self.reader.readline()
                 if not line:
@@ -82,6 +86,11 @@ class TwitchBot:
         if content.startswith("!runes"):
             result = await self.runes()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+        elif content.startswith("!pros"):
+            result = await self.pros()
+            if result is None:
+                result = NOT_IN_GAME
+            self.send(user, os.getenv('TWITCH_CHANNEL'), result)
         elif is_admin(user) and content.startswith("!"):
             if content.startswith("!add"):
                 name, tag = content.removeprefix("!add ").split("#")
@@ -94,6 +103,9 @@ class TwitchBot:
             elif content.startswith("!accounts"):
                 result = await self.accounts()
                 self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+            elif content.startswith("!restart"):
+                self.send(user, os.getenv('TWITCH_CHANNEL'), "Restarting...")
+                exit(0)
         else:
             # Hack - join emote walls
             if content.strip() == self.previous_message:
@@ -122,7 +134,7 @@ class TwitchBot:
                 # Probably best to remove it from twitch chat later
                 print(f"[Bot] Error: {e}")
                 return f"erm what did u do: {e}"
-        return "Reptile isn't in game right now"
+        return NOT_IN_GAME
 
     # Move these to their own module and add them to self.commands
     async def add_account(self, name: str, tag: str):
@@ -146,3 +158,6 @@ class TwitchBot:
             return "No accounts configured"
         full_names = [account.full_name() for account in accounts]
         return ", ".join(full_names)
+
+    async def pros(self):
+        return await self.lolpros.get_all_pro_names()
