@@ -39,6 +39,7 @@ class TwitchBot:
         self._send(f"PASS {os.getenv('TWITCH_TOKEN')}")
         self._send(f"NICK {os.getenv('TWITCH_NICK')}")
         self._send(f"JOIN {os.getenv('TWITCH_CHANNEL')}")
+        # self._send(f"CAP REQ :twitch.tv/tags")
         print("[Bot] Connected to Twitch")
 
     def _send(self, message, log=True):
@@ -47,8 +48,11 @@ class TwitchBot:
             print(f"[SEND] {message}")
         self.writer.write(f"{message}\r\n".encode())
 
-    def send(self, user, twitch_channel, message):
-        self._send(f"PRIVMSG {twitch_channel} :@{user}, {message}")
+    def send(self, user, twitch_channel, message, reply_id = None):
+        if reply_id:
+            self._send(f"@reply-parent-msg-id={reply_id} PRIVMSG {twitch_channel} :{message}")
+        else:
+            self._send(f"PRIVMSG {twitch_channel} :@{user}, {message}")
 
     def send_without_mention(self, twitch_channel, message):
         self._send(f"PRIVMSG {twitch_channel} :{message}")
@@ -90,6 +94,9 @@ class TwitchBot:
             result = await self.pros()
             if result is None:
                 result = NOT_IN_GAME
+            self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+        elif content.startswith("!rank"):
+            result = await self.rank()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
         elif is_admin(user) and content.startswith("!"):
             if content.startswith("!add"):
@@ -161,3 +168,22 @@ class TwitchBot:
 
     async def pros(self):
         return await self.lolpros.get_all_pro_names()
+
+    async def rank(self):
+        # Bad - should probably have a "main" boolean or get the current account.
+        account = self.db.get_account_by_name_and_tag("backshotsdemon", "delux")
+        accounts = self.db.get_all_accounts()
+        if len(accounts) == 0:
+            return "No accounts configured"
+        for acc in accounts:
+            try:
+                result = await self.riot.get_runes_for(acc)
+                if result is not None:
+                    account = acc
+                    break
+            except Exception as e:
+                # Something went really wrong, log it and also give the error in twitch chat
+                # Probably best to remove it from twitch chat later
+                print(f"[Bot] Error: {e}")
+                return f"erm what did u do: {e}"
+        return await self.riot.get_rank_for(account)

@@ -55,3 +55,29 @@ class RiotClient:
             return None
 
         return ', '.join(runes)
+
+    async def get_summoner_data(self, puuid: str):
+        url = f"https://{os.getenv('RIOT_PLATFORM')}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}"
+
+        async with self.session.get(url, headers=self.headers) as resp:
+            if resp.status == 200:
+                return await resp.json()
+        return None
+
+    async def get_rank_for(self, account: Account):
+        if not account.puuid:
+            account.puuid = await self.get_puuid(account.name, account.tag)
+            if not account.puuid:
+                return "Could not find summoner."
+            account.save()
+
+        data = await self.get_summoner_data(account.puuid)
+        if data is None:
+            return "Error"
+        for league in data:
+            if league['queueType'] == "RANKED_SOLO_5x5":
+                # Handle master
+                if league['tier'] == 'MASTER' or league['tier'] == "GRANDMASTER" or league['tier'] == 'CHALLENGER':
+                    return f"{league['tier'].capitalize()} {league['leaguePoints']}LP"
+                else:
+                    return f"{league['tier'].capitalize()} {league['rank']}"
