@@ -19,6 +19,13 @@ def _normalize_string_value(value: str):
     return value.strip().capitalize()
 
 
+def _wrap_method(instance: Plugin, method: Callable) -> Callable[[dict], Awaitable]:
+    # TODO: Add context object
+    async def wrapper(context):
+        return await method(instance, context)
+    return wrapper
+
+
 class Server(web.Application):
     """
     Subclass of aiohttp web.Application that contains all the command and webhook functionality
@@ -36,16 +43,16 @@ class Server(web.Application):
         self._commands: Dict[str, Callable[[dict], Awaitable]] = {}
         self._command_owners: Dict[str, str] = {}
         self._loaded_plugins: Dict[str, Type[Plugin]] = {}
+        self._plugin_instances: Dict[str, Plugin] = {}
 
     async def load_plugins(self, plugin_classes: list[Type[Plugin]]):
         for plugin_cls in plugin_classes:
             self._register_plugin_class(plugin_cls)
 
         # Lifecycle callback
-        for plugin_cls in self._loaded_plugins.values():
-            instance = plugin_cls()
-            if hasattr(instance, "on_ready"):
-                instance.on_ready()
+        for plugin_instance in self._plugin_instances.values():
+            if hasattr(plugin_instance, "on_ready"):
+                plugin_instance.on_ready()
 
     def unload_plugin(self, plugin_name: str):
         """
@@ -60,8 +67,8 @@ class Server(web.Application):
             raise PluginNotLoaded(f"Plugin '{plugin_name}' is not loaded.")
 
         # Lifecycle callback
-        instance = plugin_cls()
-        if hasattr(instance, "on_unload"):
+        instance = self._plugin_instances.get(normalized_plugin_name)
+        if instance and hasattr(instance, "on_unload"):
             instance.on_unload()
 
         to_remove: Set[str] = {
@@ -74,6 +81,7 @@ class Server(web.Application):
             del self._command_owners[command]
 
         del self._loaded_plugins[normalized_plugin_name]
+        del self._plugin_instances[normalized_plugin_name]
 
     async def reload_plugin(self, plugin_name: str):
         """
@@ -119,21 +127,22 @@ class Server(web.Application):
         :param plugin_cls: The plugin class
         :return:
         """
-        plugin_name = plugin_cls.__name__.lower()
+        plugin_name = _normalize_string_value(plugin_cls.__name__)
         if plugin_name in self._loaded_plugins:
             raise NameInUseError(f"Plugin with name {plugin_name} is already loaded.")
         if not issubclass(plugin_cls, Plugin):
             raise TypeError(f"Plugin '{plugin_name}' must subclass Plugin.")
 
+        instance = plugin_cls()
         for name, func in plugin_cls.plugin_commands.items():
-            self._register_command(plugin_name, name, func)
+            self._register_command(plugin_name, name, _wrap_method(instance, func))
 
         # Lifecycle callback
-        instance = plugin_cls()
         if hasattr(instance, "on_load"):
             instance.on_load()
 
         self._loaded_plugins[plugin_name] = plugin_cls
+        self._plugin_instances[plugin_name] = instance
 
     async def _twitch_webhook_handler(self, request):
         # Utility coroutine, ONLY designates to correct place
@@ -143,6 +152,10 @@ class Server(web.Application):
     async def _twitch_chat_received(self, request):
         # Handles all twitch chat events by passing them to the correct command
         raise NotImplementedError
+        # handler = self._commands.get(normalized_command)
+        # if not handler:
+        #   return
+        # return await handler(context)
 
     async def _twitch_callback_verification_received(self, request):
         # Responds correctly to the twitch callback verification
