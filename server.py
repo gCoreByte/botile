@@ -1,3 +1,5 @@
+import importlib
+import sys
 from typing import Awaitable, Dict, Callable, Type, Set
 
 from aiohttp import web
@@ -11,6 +13,10 @@ class NameInUseError(ValueError):
 
 class PluginNotLoaded(RuntimeError):
     pass
+
+
+def _normalize_string_value(value: str):
+    return value.strip().capitalize()
 
 
 class Server(web.Application):
@@ -35,28 +41,52 @@ class Server(web.Application):
         for plugin_cls in plugin_classes:
             self._register_plugin_class(plugin_cls)
 
-    async def unload_plugin(self, plugin_name: str):
+    def unload_plugin(self, plugin_name: str):
         """
         Unload a plugin based on its name.
         :param plugin_name: The class name of the plugin to unload
         :return:
         :raises PluginNotLoaded: Raised when the plugin is not loaded.
         """
-        # Preprocessing
-        plugin_name = plugin_name.lower().strip()
+        normalized_plugin_name = _normalize_string_value(plugin_name)
         if plugin_name not in self._loaded_plugins:
             raise PluginNotLoaded(f"Plugin '{plugin_name}' is not loaded.")
 
         to_remove: Set[str] = {
             command for command, owner in self._command_owners.items()
-            if owner == plugin_name
+            if owner == normalized_plugin_name
         }
 
         for command in to_remove:
             del self._commands[command]
             del self._command_owners[command]
 
-        del self._loaded_plugins[plugin_name]
+        del self._loaded_plugins[normalized_plugin_name]
+
+    async def reload_plugin(self, plugin_name: str):
+        """
+        Reload a plugin based on its name.
+        :param plugin_name:
+        :return:
+        """
+        normalized_plugin_name = _normalize_string_value(plugin_name)
+        plugin_cls = self._loaded_plugins.get(normalized_plugin_name)
+        if not plugin_cls:
+            raise PluginNotLoaded(f"Plugin '{plugin_name}' is not loaded.")
+
+        module_path = plugin_cls.__module__
+        if module_path in sys.modules:
+            del sys.modules[module_path]
+
+        module = importlib.import_module(module_path)
+        importlib.reload(module)
+
+        new_cls = getattr(module, normalized_plugin_name, None)
+        if not new_cls:
+            raise ImportError(f"Expected class '{plugin_name}' in module '{module_path}.")
+
+        self.unload_plugin(plugin_cls.__name__)
+        self._register_plugin_class(new_cls)
 
     def _register_command(self, plugin_name: str, name: str, func: Callable[[dict], Awaitable]):
         """
