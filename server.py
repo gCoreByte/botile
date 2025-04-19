@@ -41,6 +41,12 @@ class Server(web.Application):
         for plugin_cls in plugin_classes:
             self._register_plugin_class(plugin_cls)
 
+        # Lifecycle callback
+        for plugin_cls in self._loaded_plugins.values():
+            instance = plugin_cls()
+            if hasattr(instance, "on_ready"):
+                instance.on_ready()
+
     def unload_plugin(self, plugin_name: str):
         """
         Unload a plugin based on its name.
@@ -49,8 +55,14 @@ class Server(web.Application):
         :raises PluginNotLoaded: Raised when the plugin is not loaded.
         """
         normalized_plugin_name = _normalize_string_value(plugin_name)
-        if plugin_name not in self._loaded_plugins:
+        plugin_cls = self._loaded_plugins.get(normalized_plugin_name)
+        if not plugin_cls:
             raise PluginNotLoaded(f"Plugin '{plugin_name}' is not loaded.")
+
+        # Lifecycle callback
+        instance = plugin_cls()
+        if hasattr(instance, "on_unload"):
+            instance.on_unload()
 
         to_remove: Set[str] = {
             command for command, owner in self._command_owners.items()
@@ -115,6 +127,12 @@ class Server(web.Application):
 
         for name, func in plugin_cls.plugin_commands.items():
             self._register_command(plugin_name, name, func)
+
+        # Lifecycle callback
+        instance = plugin_cls()
+        if hasattr(instance, "on_load"):
+            instance.on_load()
+
         self._loaded_plugins[plugin_name] = plugin_cls
 
     async def _twitch_webhook_handler(self, request):

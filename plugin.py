@@ -35,7 +35,27 @@ class PluginMeta(type):
 class Plugin(metaclass=PluginMeta):
     """Base class for all plugins."""
     plugin_commands: Dict[str, Callable]
-    pass
+
+    def on_ready(self):
+        """
+        Called once when all plugins are loaded.
+        :return:
+        """
+        pass
+
+    def on_load(self):
+        """
+        Called whenever this plugin is loaded.
+        :return:
+        """
+        pass
+
+    def on_unload(self):
+        """
+        Called whenever this plugin is unloaded.
+        :return:
+        """
+        pass
 
 
 class CommandIsNotCoroutineError(TypeError):
