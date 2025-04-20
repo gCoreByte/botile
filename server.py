@@ -1,10 +1,16 @@
 import importlib
 import sys
+from enum import Enum
 from typing import Awaitable, Dict, Callable, Type, Set
 
 from aiohttp import web
 
 from plugin import Plugin
+
+class CallbackType(Enum):
+    ON_READY = "on_ready"
+    ON_LOAD = "on_load"
+    ON_UNLOAD = "on_unload"
 
 
 class NameInUseError(ValueError):
@@ -24,6 +30,11 @@ def _wrap_method(instance: Plugin, method: Callable) -> Callable[[dict], Awaitab
     async def wrapper(context):
         return await method(instance, context)
     return wrapper
+
+
+def _perform_lifecycle_callback(instance: Plugin, callback: CallbackType):
+    if hasattr(instance, callback.value):
+        getattr(instance, callback.value)()
 
 
 class Server(web.Application):
@@ -51,8 +62,7 @@ class Server(web.Application):
 
         # Lifecycle callback
         for plugin_instance in self._plugin_instances.values():
-            if hasattr(plugin_instance, "on_ready"):
-                plugin_instance.on_ready()
+            _perform_lifecycle_callback(plugin_instance, CallbackType.ON_READY)
 
     def unload_plugin(self, plugin_name: str):
         """
@@ -68,8 +78,7 @@ class Server(web.Application):
 
         # Lifecycle callback
         instance = self._plugin_instances.get(normalized_plugin_name)
-        if instance and hasattr(instance, "on_unload"):
-            instance.on_unload()
+        _perform_lifecycle_callback(instance, CallbackType.ON_UNLOAD)
 
         to_remove: Set[str] = {
             command for command, owner in self._command_owners.items()
@@ -138,8 +147,7 @@ class Server(web.Application):
             self._register_command(plugin_name, name, _wrap_method(instance, func))
 
         # Lifecycle callback
-        if hasattr(instance, "on_load"):
-            instance.on_load()
+        _perform_lifecycle_callback(instance, CallbackType.ON_LOAD)
 
         self._loaded_plugins[plugin_name] = plugin_cls
         self._plugin_instances[plugin_name] = instance
