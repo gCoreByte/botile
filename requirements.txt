@@ -1,2 +1,4 @@
-aiohttp
-python-dotenv
+aiohttp~=3.11.16
+python-dotenv~=1.1.0
+aiojobs~=1.4.0
+aiofiles~=24.1.0
