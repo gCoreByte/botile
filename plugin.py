@@ -10,8 +10,11 @@ def command(name: str = None):
     """
 
     def decorator(func: Callable):
+        func_name = name
+        if func_name is None:
+            func_name = func.__name__
         setattr(func, "__is_command__", True)
-        setattr(func, "__command_name__", name or func.__name__)
+        setattr(func, "__command_name__", func_name.lower())
         return func
 
     return decorator

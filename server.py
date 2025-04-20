@@ -1,4 +1,5 @@
 import importlib
+import os
 import sys
 from enum import Enum
 from typing import Awaitable, Dict, Callable, Type, Set
@@ -12,6 +13,11 @@ class CallbackType(Enum):
     ON_LOAD = "on_load"
     ON_UNLOAD = "on_unload"
 
+class TwitchNotificationType(Enum):
+    NOTIFICATION = "notification"
+    WEBHOOK_CALLBACK_VERIFICATION = "webhook_callback_verification"
+    REVOCATION = "revocation"
+
 
 class NameInUseError(ValueError):
     pass
@@ -22,7 +28,7 @@ class PluginNotLoaded(RuntimeError):
 
 
 def _normalize_string_value(value: str):
-    return value.strip().capitalize()
+    return value.strip().lower()
 
 
 def _wrap_method(instance: Plugin, method: Callable) -> Callable[[dict], Awaitable]:
@@ -55,6 +61,8 @@ class Server(web.Application):
         self._command_owners: Dict[str, str] = {}
         self._loaded_plugins: Dict[str, Type[Plugin]] = {}
         self._plugin_instances: Dict[str, Plugin] = {}
+
+        self.on_cleanup.append(self._revoke_subscriptions)
 
     async def load_plugins(self, plugin_classes: list[Type[Plugin]]):
         for plugin_cls in plugin_classes:
@@ -152,23 +160,63 @@ class Server(web.Application):
         self._loaded_plugins[plugin_name] = plugin_cls
         self._plugin_instances[plugin_name] = instance
 
-    async def _twitch_webhook_handler(self, request):
-        # Utility coroutine, ONLY designates to correct place
-        # Maybe later it's worth separating per event but no point currently
-        raise NotImplementedError
+    async def _twitch_webhook_handler(self, request: web.Request) -> web.Response:
+        """
+        Sends the request to the correct handler.
+        :param request:
+        :return:
+        """
+        # We need to process these within a few seconds. If performance becomes an issue we can store these temporarily,
+        # respond 200 fast and then process in the background.
+        match request.headers["Twitch-Eventsub-Message-Type"]:
+            case TwitchNotificationType.NOTIFICATION.value:
+                return await self._twitch_notification_received(request)
+            case TwitchNotificationType.WEBHOOK_CALLBACK_VERIFICATION.value:
+                return await self._twitch_callback_verification_received(request)
+            case TwitchNotificationType.REVOCATION.value:
+                return await self._twitch_subscription_revocation_received(request)
 
-    async def _twitch_chat_received(self, request):
-        # Handles all twitch chat events by passing them to the correct command
-        raise NotImplementedError
-        # handler = self._commands.get(normalized_command)
-        # if not handler:
-        #   return
-        # return await handler(context)
+    async def _twitch_notification_received(self, request: web.Request) -> web.Response:
+        """
+        Sends the notification to the correct handler.
+        :param request:
+        :return: web.
+        """
+        # For now lets just send them directly to the chat handler - can refactor later when needed.
+        json = await request.json()
+        return await self._twitch_chat_received(json["event"])
 
-    async def _twitch_callback_verification_received(self, request):
-        # Responds correctly to the twitch callback verification
-        raise NotImplementedError
+
+    async def _twitch_chat_received(self, context: Dict) -> web.Response:
+        """
+        Passes the received message to the corresponding handler alongside the context.
+        :param context:
+        :return web.Response:
+        """
+        command = _normalize_string_value(context["message"]["text"]).split()[0]
+        # Not a command, return fast
+        if not command.startswith("!"):
+            return web.Response(status=200)
+        command = command.removeprefix("!")
+        handler = self._commands.get(command)
+        if handler:
+          await handler(context)
+        return web.Response(status=200)
+
+    async def _twitch_callback_verification_received(self, request: web.Request) -> web.Response:
+        """
+        Responds to twitch challenges.
+        :param request:
+        :return:
+        """
+        json = await request.json()
+        print("[Twitch] Responding to challenge...")
+        return web.Response(status=200, text=json["challenge"], content_type="text/plain")
 
     async def _twitch_subscription_revocation_received(self, request):
         # Subscription was revoked - send a message to Discord webhook as this should not happen
         raise NotImplementedError
+
+    async def _revoke_subscriptions(self, app):
+        raise NotImplementedError
+
