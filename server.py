@@ -218,5 +218,6 @@ class Server(web.Application):
         raise NotImplementedError
 
     async def _revoke_subscriptions(self, app):
-        raise NotImplementedError
+        # TODO: Clean up subscriptions on shutdown.
+        pass
 
