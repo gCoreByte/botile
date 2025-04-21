@@ -3,3 +3,4 @@ database.db
 /.venv
 /.idea
 /__pycache__
+token.data
