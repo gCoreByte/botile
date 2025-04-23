@@ -80,7 +80,7 @@ class TwitchBot:
     # Where the key is the string and the value is the function to run
     async def handle_command(self, message):
         user = message.split("!", 1)[0][1:]
-        content = message.split(":", 2)[2]
+        content: str = message.split(":", 2)[2]
         # Processing
         content = content.removesuffix("  󠀀") # 7tv send twice hack
         content = content.removesuffix(" 󠀀")
@@ -113,6 +113,8 @@ class TwitchBot:
             elif content.startswith("!restart"):
                 self.send(user, os.getenv('TWITCH_CHANNEL'), "Restarting...")
                 exit(0)
+        elif "@botile9lol" in content.lower() and "sentient" in content.lower():
+            self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
         else:
             # Hack - join emote walls
             if content.strip() == self.previous_message:
