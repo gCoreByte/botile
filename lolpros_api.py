@@ -28,7 +28,7 @@ class LolprosApi:
     async def get_all_pro_names(self):
         data = await self._get_lolpros_data()
         if data is None:
-            return 'Something went wrong with the API call'
+            return None
 
         champion_data = await self.champion_cache.get(self.session)
         red = []
@@ -40,5 +40,13 @@ class LolprosApi:
                 blue.append(formatted_string)
             elif participant['teamId'] == 200:
                 red.append(formatted_string)
-        return f"Blue: {', '.join(blue)} | Red: {', '.join(red)}"
+        blue_formatted = f"🟦: {', '.join(blue)}"
+        red_formatted= f"🟥: {', '.join(red)}"
+        final = ""
+        if len(blue) > 0:
+            final += blue_formatted
+        if len(blue) > 0 and len(red) > 0:
+            final += " ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ "
+        if len(red) > 0:
+            final += red_formatted
 
