@@ -18,8 +18,8 @@ class LolprosApi:
         if len(keys) == 0 or isinstance(value, str):
             return value
         if value is None:
-            return "Unknown"
-        value = value.get(keys[0], "Unknown")
+            return None
+        value = value.get(keys[0], None)
         return self._dig(value, keys[1:])
 
     def _get_player_name(self, participant: {}):
@@ -35,7 +35,10 @@ class LolprosApi:
         blue = []
         for participant in data['participants']:
             champion_name = champion_data[participant['championId']]['name']
-            formatted_string = f"{champion_name} ({self._get_player_name(participant)})"
+            player_name = self._get_player_name(participant)
+            if player_name is None:
+                continue
+            formatted_string = f"{champion_name} ({player_name})"
             if participant['teamId'] == 100:
                 blue.append(formatted_string)
             elif participant['teamId'] == 200:
@@ -46,7 +49,9 @@ class LolprosApi:
         if len(blue) > 0:
             final += blue_formatted
         if len(blue) > 0 and len(red) > 0:
-            final += " ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ "
+            final += " ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ "
         if len(red) > 0:
             final += red_formatted
-
+        if len(final) > 0:
+            return final
+        return None
