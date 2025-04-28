@@ -10,8 +10,9 @@ class LolprosApi:
         self.champion_cache = ChampionCache()
 
     async def _get_lolpros_data(self, account: Account):
+        headers = { "Accept": "application/json", "Host": "api.lolpros.gg", "Lpgg-Server": "EUW" }
         params = { "query": account.name, "tagline": account.tag }
-        async with self.session.get(LOLPROS_API_URL, params=params) as resp:
+        async with self.session.get(LOLPROS_API_URL, params=params, headers=headers) as resp:
             if resp.status == 200:
                 return await resp.json()
         return None
