@@ -169,7 +169,19 @@ class TwitchBot:
         return ", ".join(full_names)
 
     async def pros(self):
-        return await self.lolpros.get_all_pro_names()
+        accounts = self.db.get_all_accounts()
+        if len(accounts) == 0:
+            return "No accounts configured"
+        for acc in accounts:
+            try:
+                result = await self.lolpros.get_all_pro_names(acc)
+                if result is not None:
+                    return result
+            except Exception as e:
+                # Something went really wrong, log it and also give the error in twitch chat
+                # Probably best to remove it from twitch chat later
+                print(f"[Bot] Error: {e}")
+                return f"erm what did u do: {e}"
 
     async def rank(self):
         # Bad - should probably have a "main" boolean or get the current account.
