@@ -182,6 +182,7 @@ class TwitchBot:
                 # Probably best to remove it from twitch chat later
                 print(f"[Bot] Error: {e}")
                 return f"erm what did u do: {e}"
+        return NOT_IN_GAME
 
     async def rank(self):
         # Bad - should probably have a "main" boolean or get the current account.
