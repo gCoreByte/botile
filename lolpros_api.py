@@ -1,15 +1,17 @@
 import os
 from champion_cache import ChampionCache
+from db import Account
+
+LOLPROS_API_URL = "https://api.lolpros.gg/lol/game"
 
 class LolprosApi:
     def __init__(self, session):
         self.session = session
-        # Can we generate this somehow?
-        self.lolpros_url = os.getenv('LOLPROS_URL')
         self.champion_cache = ChampionCache()
 
-    async def _get_lolpros_data(self):
-        async with self.session.get(self.lolpros_url) as resp:
+    async def _get_lolpros_data(self, account: Account):
+        params = { "query": account.name, "tagline": account.tag }
+        async with self.session.get(LOLPROS_API_URL, params=params) as resp:
             if resp.status == 200:
                 return await resp.json()
         return None
@@ -22,11 +24,13 @@ class LolprosApi:
         value = value.get(keys[0], None)
         return self._dig(value, keys[1:])
 
-    def _get_player_name(self, participant: {}):
+    def _get_player_name(self, participant: {}, account: Account):
+        if participant['riotId'].lower().strip() == account.full_name():
+            return "Reptile"
         return self._dig(participant['lolpros'], "name")
 
-    async def get_all_pro_names(self):
-        data = await self._get_lolpros_data()
+    async def get_all_pro_names(self, account: Account):
+        data = await self._get_lolpros_data(account)
         if data is None:
             return None
 
@@ -35,7 +39,7 @@ class LolprosApi:
         blue = []
         for participant in data['participants']:
             champion_name = champion_data[participant['championId']]['name']
-            player_name = self._get_player_name(participant)
+            player_name = self._get_player_name(participant, account)
             if player_name is None:
                 continue
             formatted_string = f"{champion_name} ({player_name})"
