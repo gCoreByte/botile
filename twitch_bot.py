@@ -101,7 +101,9 @@ class TwitchBot:
         elif content.startswith("!rank"):
             result = await self.rank()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
-        elif "map" in normalized_content and ("out" in normalized_content or "how" in normalized_content):
+        elif "map" in normalized_content and ("out" in normalized_content or "how" in normalized_content or "does" in normalized_content or "?" in normalized_content or "why" in normalized_content):
+            if "!map" in normalized_content:
+                return
             self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "!map")
         elif is_admin(user) and content.startswith("!"):
             if content.startswith("!add"):
