@@ -81,10 +81,13 @@ class TwitchBot:
     async def handle_command(self, message):
         user = message.split("!", 1)[0][1:]
         content: str = message.split(":", 2)[2]
+        if user.lower() == "nightbot":
+            return
         # Processing
         content = content.removesuffix("  󠀀") # 7tv send twice hack
         content = content.removesuffix(" 󠀀")
         content = content.strip()
+        normalized_content = content.lower()
 
         # FIXME
         if content.startswith("!runes"):
@@ -98,6 +101,8 @@ class TwitchBot:
         elif content.startswith("!rank"):
             result = await self.rank()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+        elif "map" in normalized_content and ("out" in normalized_content or "how" in normalized_content):
+            self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "!map")
         elif is_admin(user) and content.startswith("!"):
             if content.startswith("!add"):
                 name, tag = content.removeprefix("!add ").split("#")
