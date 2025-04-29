@@ -80,4 +80,4 @@ class RiotClient:
                 if league['tier'] == 'MASTER' or league['tier'] == "GRANDMASTER" or league['tier'] == 'CHALLENGER':
                     return f"{league['tier'].capitalize()} {league['leaguePoints']}LP"
                 else:
-                    return f"{league['tier'].capitalize()} {league['rank']}"
+                    return f"{league['tier'].capitalize()} {league['rank']} {league['leaguePoints']}LP"
