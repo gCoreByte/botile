@@ -108,6 +108,10 @@ class TwitchBot:
             self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "!map")
         elif "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content):
             self.send(user, os.getenv('TWITCH_CHANNEL'), random.choice(["yea", "nah", "maybe"]))
+        elif "@botile9" in normalized_content and "hi" in normalized_content:
+            self.send(user, os.getenv('TWITCH_CHANNEL'), "hi")
+        elif "@botile9" in normalized_content and "bye" in normalized_content:
+            self.send(user, os.getenv('TWITCH_CHANNEL'), "bye")
         elif is_admin(user) and content.startswith("!"):
             if content.startswith("!add"):
                 name, tag = content.removeprefix("!add ").split("#")
