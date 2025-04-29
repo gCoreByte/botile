@@ -106,7 +106,7 @@ class TwitchBot:
             if "!map" in normalized_content or "!banned" in normalized_content or "英雄联盟" in normalized_content:
                 return
             self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "!map")
-        elif "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content):
+        elif "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content):
             self.send(user, os.getenv('TWITCH_CHANNEL'), random.choice(["yea", "nah", "maybe"]))
         elif "@botile9" in normalized_content and "hi" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "hi")
