@@ -102,11 +102,13 @@ class TwitchBot:
         elif content.startswith("!rank"):
             result = await self.rank()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+        elif "@botile9lol" in content.lower() and "sentient" in content.lower():
+            self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
         elif "pbe" in normalized_content or ("map" in normalized_content and ("out" in normalized_content or "how" in normalized_content or "does" in normalized_content or "?" in normalized_content or "why" in normalized_content or "what" in normalized_content)):
             if "!map" in normalized_content or "!banned" in normalized_content or "英雄联盟" in normalized_content:
                 return
             self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "!map")
-        elif "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content):
+        elif "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content):
             self.send(user, os.getenv('TWITCH_CHANNEL'), random.choice(["yea", "nah", "maybe"]))
         elif "@botile9" in normalized_content and "hi" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "hi")
@@ -127,8 +129,6 @@ class TwitchBot:
             elif content.startswith("!restart"):
                 self.send(user, os.getenv('TWITCH_CHANNEL'), "Restarting...")
                 exit(0)
-        elif "@botile9lol" in content.lower() and "sentient" in content.lower():
-            self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
         else:
             # Hack - join emote walls
             if content.strip() == self.previous_message:
