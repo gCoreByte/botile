@@ -125,7 +125,7 @@ class TwitchBot:
             elif content.startswith("!restart"):
                 self.send(user, os.getenv('TWITCH_CHANNEL'), "Restarting...")
                 exit(0)
-            elif content.startswith("!s"):
+            elif content.startswith("!s "):
                 self.send_without_mention(os.getenv('TWITCH_CHANNEL'), content.removeprefix("!s "))
         else:
             # Hack - join emote walls
