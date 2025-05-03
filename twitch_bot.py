@@ -106,6 +106,8 @@ class TwitchBot:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
         elif not normalized_content.startswith("!") and "vayne" in normalized_content and "skin" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "kda all out vayne, custom skin from https://www.runeforge.io/post/k-da-all-out-vayne")
+        elif not normalized_content.startswith("!") and "delay" in normalized_content:
+            self.send(user, os.getenv('TWITCH_CHANNEL'), "!delay")
         elif "@botile9lol" in normalized_content and "sentient" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
         elif not normalized_content.startswith("!") and "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
