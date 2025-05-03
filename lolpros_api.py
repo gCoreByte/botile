@@ -27,7 +27,7 @@ class LolprosApi:
 
     def _get_player_name(self, participant: {}, account: Account):
         if participant['riotId'].lower().strip() == account.full_name():
-            return "Reptile"
+            return "CGN Reptile"
         return self._dig(participant['lolpros'], "name")
 
     async def get_all_pro_names(self, account: Account):
@@ -43,6 +43,12 @@ class LolprosApi:
         for participant in data['participants']:
             champion_name = champion_data[participant['championId']]['name']
             player_name = self._get_player_name(participant, account)
+            if player_name is not None:
+                team = participant['lolpros'].get('team')
+                if team is not None:
+                    team_tag = team.get('tag', "")
+                    player_name = f"{team_tag} {player_name}".strip()
+
             formatted_string = f"{champion_name} ({player_name})"
             if participant['teamId'] == 100:
                 if player_name is not None:
