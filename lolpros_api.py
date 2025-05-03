@@ -52,8 +52,8 @@ class LolprosApi:
             elif participant['teamId'] == 200:
                 red.append(formatted_string)
                 average_red_lp += participant['ranking']['leaguePoints']
-        blue_formatted = f"🟦 (Average LP: {average_blue_lp / len(blue)}): {', '.join(blue)}"
-        red_formatted= f"🟥 (Average LP: {average_red_lp / len(red)}): {', '.join(red)}"
+        blue_formatted = f"🟦 (Average LP: {round(average_blue_lp / len(blue))}): {', '.join(blue)}"
+        red_formatted= f"🟥 (Average LP: {round(average_red_lp / len(red))}): {', '.join(red)}"
         final = ""
         final += blue_formatted
         final += " ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ "
