@@ -82,7 +82,7 @@ class TwitchBot:
     async def handle_command(self, message):
         user = message.split("!", 1)[0][1:]
         content: str = message.split(":", 2)[2]
-        if user.lower() == "nightbot":
+        if user.lower() == "nightbot" or user.lower() == "botile9lol":
             return
         # Processing
         content = content.removesuffix("  󠀀") # 7tv send twice hack
@@ -102,6 +102,8 @@ class TwitchBot:
         elif normalized_content.startswith("!rank"):
             result = await self.rank()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+        elif not normalized_content.startswith("!") and "zeri" in normalized_content and "skin" in normalized_content:
+            self.send(user, os.getenv('TWITCH_CHANNEL'), "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
         elif "@botile9lol" in normalized_content and "sentient" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
         elif "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
