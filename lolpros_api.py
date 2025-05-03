@@ -43,17 +43,17 @@ class LolprosApi:
         for participant in data['participants']:
             champion_name = champion_data[participant['championId']]['name']
             player_name = self._get_player_name(participant, account)
-            if player_name is None:
-                continue
             formatted_string = f"{champion_name} ({player_name})"
             if participant['teamId'] == 100:
-                blue.append(formatted_string)
+                if player_name is not None:
+                    blue.append(formatted_string)
                 average_blue_lp += participant['ranking']['leaguePoints']
             elif participant['teamId'] == 200:
-                red.append(formatted_string)
+                if player_name is not None:
+                    red.append(formatted_string)
                 average_red_lp += participant['ranking']['leaguePoints']
-        blue_formatted = f"🟦 (Average LP: {round(average_blue_lp / len(blue))}): {', '.join(blue)}"
-        red_formatted= f"🟥 (Average LP: {round(average_red_lp / len(red))}): {', '.join(red)}"
+        blue_formatted = f"🟦 (Average LP: {round(average_blue_lp / 5)}): {', '.join(blue)}"
+        red_formatted= f"🟥 (Average LP: {round(average_red_lp / 5)}): {', '.join(red)}"
         final = ""
         final += blue_formatted
         final += " ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ "
