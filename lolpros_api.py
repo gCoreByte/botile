@@ -44,10 +44,11 @@ class LolprosApi:
             champion_name = champion_data[participant['championId']]['name']
             player_name = self._get_player_name(participant, account)
             if player_name is not None:
-                team = participant['lolpros'].get('team')
-                if team is not None:
-                    team_tag = team.get('tag', "")
-                    player_name = f"{team_tag} {player_name}".strip()
+                if participant['lolpros'] is not None:
+                    team = participant['lolpros'].get('team')
+                    if team is not None:
+                        team_tag = team.get('tag', "")
+                        player_name = f"{team_tag} {player_name}".strip()
 
             formatted_string = f"{champion_name} ({player_name})"
             if participant['teamId'] == 100:
