@@ -91,18 +91,18 @@ class TwitchBot:
         normalized_content = content.lower()
 
         # FIXME
-        if content.startswith("!runes"):
+        if normalized_content.startswith("!runes"):
             result = await self.runes()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
-        elif content.startswith("!pros"):
+        elif normalized_content.startswith("!pros"):
             result = await self.pros()
             if result is None:
                 result = NOT_IN_GAME
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
-        elif content.startswith("!rank"):
+        elif normalized_content.startswith("!rank"):
             result = await self.rank()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
-        elif "@botile9lol" in content.lower() and "sentient" in content.lower():
+        elif "@botile9lol" in normalized_content and "sentient" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
         elif "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
             self.send(user, os.getenv('TWITCH_CHANNEL'), random.choice(["yea", "nah", "maybe"]))
@@ -110,22 +110,22 @@ class TwitchBot:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "hi")
         elif "@botile9" in normalized_content and "bye" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "bye")
-        elif is_admin(user) and content.startswith("!"):
-            if content.startswith("!add"):
-                name, tag = content.removeprefix("!add ").split("#")
+        elif is_admin(user) and normalized_content.startswith("!"):
+            if normalized_content.startswith("!add"):
+                name, tag = normalized_content.removeprefix("!add ").split("#")
                 result = await self.add_account(name, tag)
                 self.send(user, os.getenv('TWITCH_CHANNEL'), result)
-            elif content.startswith("!delete"):
-                name, tag = content.removeprefix("!delete ").split("#")
+            elif normalized_content.startswith("!delete"):
+                name, tag = normalized_content.removeprefix("!delete ").split("#")
                 result = await self.delete_account(name, tag)
                 self.send(user, os.getenv('TWITCH_CHANNEL'), result)
-            elif content.startswith("!accounts"):
+            elif normalized_content.startswith("!accounts"):
                 result = await self.accounts()
                 self.send(user, os.getenv('TWITCH_CHANNEL'), result)
-            elif content.startswith("!restart"):
+            elif normalized_content.startswith("!restart"):
                 self.send(user, os.getenv('TWITCH_CHANNEL'), "Restarting...")
                 exit(0)
-            elif content.startswith("!s "):
+            elif normalized_content.startswith("!s "):
                 self.send_without_mention(os.getenv('TWITCH_CHANNEL'), content.removeprefix("!s "))
         else:
             # Hack - join emote walls
