@@ -106,11 +106,11 @@ class TwitchBot:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
         elif "@botile9lol" in normalized_content and "sentient" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
-        elif "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
+        elif not normalized_content.startswith("!") and "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
             self.send(user, os.getenv('TWITCH_CHANNEL'), random.choice(["yea", "nah", "maybe"]))
-        elif "@botile9" in normalized_content and "hi" in normalized_content:
+        elif not normalized_content.startswith("!") and "@botile9" in normalized_content and "hi" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "hi")
-        elif "@botile9" in normalized_content and "bye" in normalized_content:
+        elif not normalized_content.startswith("!") and "@botile9" in normalized_content and "bye" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "bye")
         elif is_admin(user) and normalized_content.startswith("!"):
             if normalized_content.startswith("!add"):
