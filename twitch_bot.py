@@ -40,7 +40,8 @@ class TwitchBot:
         self._send(f"PASS {os.getenv('TWITCH_TOKEN')}")
         self._send(f"NICK {os.getenv('TWITCH_NICK')}")
         self._send(f"JOIN {os.getenv('TWITCH_CHANNEL')}")
-        # self._send(f"CAP REQ :twitch.tv/tags")
+        self._send(f"CAP REQ :twitch.tv/commands")
+        self._send(f"CAP REQ :twitch.tv/tags")
         print("[Bot] Connected to Twitch")
 
     def _send(self, message, log=True):
@@ -80,6 +81,9 @@ class TwitchBot:
     # Probably best to add a self.commands = {} type object
     # Where the key is the string and the value is the function to run
     async def handle_command(self, message):
+        # Dont handle replies for now, fix in V2
+        if "reply-parent-msg-id" in message:
+            return
         user = message.split("!", 1)[0][1:]
         content: str = message.split(":", 2)[2]
         if user.lower() == "nightbot" or user.lower() == "botile9lol":
@@ -110,7 +114,7 @@ class TwitchBot:
             self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "!delay")
         elif "@botile9lol" in normalized_content and "sentient" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
-        elif not normalized_content.startswith("!") and "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
+        elif (not normalized_content.startswith("!")) and "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
             self.send(user, os.getenv('TWITCH_CHANNEL'), random.choice(["yea", "nah", "maybe"]))
         elif not normalized_content.startswith("!") and "@botile9" in normalized_content and "hi" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "hi")
