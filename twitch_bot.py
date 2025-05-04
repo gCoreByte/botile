@@ -40,8 +40,7 @@ class TwitchBot:
         self._send(f"PASS {os.getenv('TWITCH_TOKEN')}")
         self._send(f"NICK {os.getenv('TWITCH_NICK')}")
         self._send(f"JOIN {os.getenv('TWITCH_CHANNEL')}")
-        self._send(f"CAP REQ :twitch.tv/commands")
-        self._send(f"CAP REQ :twitch.tv/tags")
+        # self._send(f"CAP REQ :twitch.tv/tags")
         print("[Bot] Connected to Twitch")
 
     def _send(self, message, log=True):
@@ -81,22 +80,7 @@ class TwitchBot:
     # Probably best to add a self.commands = {} type object
     # Where the key is the string and the value is the function to run
     async def handle_command(self, message):
-        # Dont handle replies for now, fix in V2
-        if "reply-parent-msg-id" in message:
-            return
-        # Extract display-name from tags
-        tags = message.split(":", 1)[0]
-        display_name = None
-        reply_parent_msg_id = None
-        for tag in tags.split(";"):
-            if tag.startswith("display-name="):
-                display_name = tag.split("=", 1)[1]
-            if tag.startswith("id="):
-                reply_parent_msg_id = tag.split("=", 1)[1]
-        if not display_name:
-            # Fallback to old method if no display-name tag found
-            display_name = message.split("!", 1)[0][1:]
-        user = display_name
+        user = message.split("!", 1)[0][1:]
         content: str = message.split(":", 2)[2]
         if user.lower() == "nightbot" or user.lower() == "botile9lol":
             return
@@ -106,48 +90,46 @@ class TwitchBot:
         content = content.strip()
         normalized_content = content.lower()
 
-        print(message)
-        print(reply_parent_msg_id)
-        print(user)
+        # FIXME
         if normalized_content.startswith("!runes"):
             result = await self.runes()
-            self.send(user, os.getenv('TWITCH_CHANNEL'), result, reply_parent_msg_id)
+            self.send(user, os.getenv('TWITCH_CHANNEL'), result)
         elif normalized_content.startswith("!pros"):
             result = await self.pros()
             if result is None:
                 result = NOT_IN_GAME
-            self.send(user, os.getenv('TWITCH_CHANNEL'), result, reply_parent_msg_id)
+            self.send(user, os.getenv('TWITCH_CHANNEL'), result)
         elif normalized_content.startswith("!rank"):
             result = await self.rank()
-            self.send(user, os.getenv('TWITCH_CHANNEL'), result, reply_parent_msg_id)
+            self.send(user, os.getenv('TWITCH_CHANNEL'), result)
         elif not normalized_content.startswith("!") and "zeri" in normalized_content and "skin" in normalized_content:
-            self.send(user, os.getenv('TWITCH_CHANNEL'), "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb", reply_parent_msg_id)
+            self.send(user, os.getenv('TWITCH_CHANNEL'), "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
         elif not normalized_content.startswith("!") and "vayne" in normalized_content and "skin" in normalized_content:
-            self.send(user, os.getenv('TWITCH_CHANNEL'), "kda all out vayne, custom skin from https://www.runeforge.io/post/k-da-all-out-vayne", reply_parent_msg_id)
+            self.send(user, os.getenv('TWITCH_CHANNEL'), "kda all out vayne, custom skin from https://www.runeforge.io/post/k-da-all-out-vayne")
         elif not normalized_content.startswith("!") and "delay" in normalized_content:
             self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "!delay")
-        elif "@botile9lol" in normalized_content and "sentient" in normalized_content:
-            self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient", reply_parent_msg_id)
-        elif (not normalized_content.startswith("!")) and "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
-            self.send(user, os.getenv('TWITCH_CHANNEL'), random.choice(["yea", "nah", "maybe"]), reply_parent_msg_id)
-        elif not normalized_content.startswith("!") and "@botile9" in normalized_content and "hi" in normalized_content:
-            self.send(user, os.getenv('TWITCH_CHANNEL'), "hi", reply_parent_msg_id)
-        elif not normalized_content.startswith("!") and "@botile9" in normalized_content and "bye" in normalized_content:
-            self.send(user, os.getenv('TWITCH_CHANNEL'), "bye", reply_parent_msg_id)
+        # elif "@botile9lol" in normalized_content and "sentient" in normalized_content:
+        #    self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
+        # elif (not normalized_content.startswith("!")) and "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
+        #    self.send(user, os.getenv('TWITCH_CHANNEL'), random.choice(["yea", "nah", "maybe"]))
+        # elif not normalized_content.startswith("!") and "@botile9" in normalized_content and "hi" in normalized_content:
+        #    self.send(user, os.getenv('TWITCH_CHANNEL'), "hi")
+        # elif not normalized_content.startswith("!") and "@botile9" in normalized_content and "bye" in normalized_content:
+        #    self.send(user, os.getenv('TWITCH_CHANNEL'), "bye")
         elif is_admin(user) and normalized_content.startswith("!"):
             if normalized_content.startswith("!add"):
                 name, tag = normalized_content.removeprefix("!add ").split("#")
                 result = await self.add_account(name, tag)
-                self.send(user, os.getenv('TWITCH_CHANNEL'), result, reply_parent_msg_id)
+                self.send(user, os.getenv('TWITCH_CHANNEL'), result)
             elif normalized_content.startswith("!delete"):
                 name, tag = normalized_content.removeprefix("!delete ").split("#")
                 result = await self.delete_account(name, tag)
-                self.send(user, os.getenv('TWITCH_CHANNEL'), result, reply_parent_msg_id)
+                self.send(user, os.getenv('TWITCH_CHANNEL'), result)
             elif normalized_content.startswith("!accounts"):
                 result = await self.accounts()
-                self.send(user, os.getenv('TWITCH_CHANNEL'), result, reply_parent_msg_id)
+                self.send(user, os.getenv('TWITCH_CHANNEL'), result)
             elif normalized_content.startswith("!restart"):
-                self.send(user, os.getenv('TWITCH_CHANNEL'), "Restarting...", reply_parent_msg_id)
+                self.send(user, os.getenv('TWITCH_CHANNEL'), "Restarting...")
                 exit(0)
             elif normalized_content.startswith("!s "):
                 self.send_without_mention(os.getenv('TWITCH_CHANNEL'), content.removeprefix("!s "))
