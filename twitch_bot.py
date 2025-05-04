@@ -106,7 +106,9 @@ class TwitchBot:
         content = content.strip()
         normalized_content = content.lower()
 
-        # FIXME
+        print(message)
+        print(reply_parent_msg_id)
+        print(user)
         if normalized_content.startswith("!runes"):
             result = await self.runes()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result, reply_parent_msg_id)
