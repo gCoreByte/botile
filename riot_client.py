@@ -1,4 +1,6 @@
 import os
+
+from champion_cache import ChampionCache
 from rune_cache import RuneCache
 from db import Account
 
@@ -7,6 +9,7 @@ class RiotClient:
         self.session = session
         self.headers = {"X-Riot-Token": os.getenv("RIOT_API_KEY")}
         self.rune_cache = RuneCache()
+        self.champion_cache = ChampionCache()
 
     async def get_puuid(self, name, tag):
         url = f"https://{os.getenv('RIOT_REGION')}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{name}/{tag}"
@@ -81,3 +84,23 @@ class RiotClient:
                     return f"{league['tier'].capitalize()} {league['leaguePoints']}LP"
                 else:
                     return f"{league['tier'].capitalize()} {league['rank']} {league['leaguePoints']}LP"
+
+    async def get_champion_for(self, account: Account):
+        if not account.puuid:
+            account.puuid = await self.get_puuid(account.name, account.tag)
+            if not account.puuid:
+                return "Could not find summoner."
+            account.save()
+
+        match = await self.get_current_match(account.puuid)
+        if not match:
+            return None
+        
+        player = next((p for p in match["participants"] if p["puuid"] == account.puuid), None)
+        if not player:
+            return None
+
+        champion_id = player["championId"]
+        champion_json = await self.champion_cache.get(self.session)
+        champion_name = champion_json[champion_id]["name"]
+        return champion_name

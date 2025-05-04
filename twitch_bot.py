@@ -110,6 +110,13 @@ class TwitchBot:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "spirit blossom jhin, custom skin from https://runeforge.dev/mods/16e6bd39-df9e-4e02-b2d1-71a1b814eb94")
         elif not normalized_content.startswith("!") and "delay" in normalized_content:
             self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "!delay")
+        elif not normalized_content.startswith("!") and "hob" in normalized_content and not "ad" in normalized_content:
+            text = "LT is really slow to stack doesn't give too much value when stacked. Because Zeri turns AS past 1.5 into AD, with HOB you get a big burst to AD immediately in fights."
+            if "zeri" in normalized_content:
+                return self.send(user, os.getenv('TWITCH_CHANNEL'), text)
+            result = await self.send_hob_ad()
+            if result:
+                self.send(user, os.getenv('TWITCH_CHANNEL'), text)
         # elif "@botile9lol" in normalized_content and "sentient" in normalized_content:
         #    self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
         # elif (not normalized_content.startswith("!")) and "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
@@ -222,3 +229,20 @@ class TwitchBot:
                 print(f"[Bot] Error: {e}")
                 return f"erm what did u do: {e}"
         return await self.riot.get_rank_for(account)
+    
+    async def send_hob_ad(self):
+        accounts = self.db.get_all_accounts()
+        if len(accounts) == 0:
+            return "No accounts configured"
+        for acc in accounts:
+            try:
+                result = await self.riot.get_champion_for(acc)
+                if result is not None:
+                    return result == "Zeri"
+            except Exception as e:
+                # Something went really wrong, log it and also give the error in twitch chat
+                # Probably best to remove it from twitch chat later
+                print(f"[Bot] Error: {e}")
+                return f"erm what did u do: {e}"
+        return False
+    
