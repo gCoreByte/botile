@@ -85,7 +85,7 @@ class RiotClient:
                 else:
                     return f"{league['tier'].capitalize()} {league['rank']} {league['leaguePoints']}LP"
 
-    async def get_champion_for(self, account: Account):
+    async def get_champion_for(self, account: Account) -> str | None:
         if not account.puuid:
             account.puuid = await self.get_puuid(account.name, account.tag)
             if not account.puuid:

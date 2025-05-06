@@ -102,6 +102,14 @@ class TwitchBot:
         elif normalized_content.startswith("!rank"):
             result = await self.rank()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+        elif not normalized_content.startswith("!") and "skin" in normalized_content and ("what" in normalized_content or "which" in normalized_content):
+            current_champion = await self.get_current_champion()
+            if current_champion == "Zeri":
+                self.send(user, os.getenv('TWITCH_CHANNEL'), "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
+            elif current_champion == "Vayne":
+                self.send(user, os.getenv('TWITCH_CHANNEL'), "kda all out vayne, custom skin from https://www.runeforge.io/post/k-da-all-out-vayne")
+            elif current_champion == "Xayah":
+                self.send(user, os.getenv('TWITCH_CHANNEL'), "winterblessed xayah, custom skin from https://www.runeforge.io/post/winterblessed-xayah")
         elif not normalized_content.startswith("!") and "zeri" in normalized_content and "skin" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
         elif not normalized_content.startswith("!") and "vayne" in normalized_content and "skin" in normalized_content:
@@ -116,7 +124,7 @@ class TwitchBot:
             text = "LT is really slow to stack doesn't give too much value when stacked. Because Zeri turns AS past 1.5 into AD, with HOB you get a big burst to AD immediately in fights."
             if "zeri" in normalized_content:
                 return self.send(user, os.getenv('TWITCH_CHANNEL'), text)
-            result = await self.send_hob_ad()
+            result = await self.is_champion("Zeri")
             if result:
                 self.send(user, os.getenv('TWITCH_CHANNEL'), text)
         # elif "@botile9lol" in normalized_content and "sentient" in normalized_content:
@@ -232,7 +240,7 @@ class TwitchBot:
                 return f"erm what did u do: {e}"
         return await self.riot.get_rank_for(account)
     
-    async def send_hob_ad(self):
+    async def get_current_champion(self):
         accounts = self.db.get_all_accounts()
         if len(accounts) == 0:
             return "No accounts configured"
@@ -240,11 +248,14 @@ class TwitchBot:
             try:
                 result = await self.riot.get_champion_for(acc)
                 if result is not None:
-                    return result == "Zeri"
+                    return result
             except Exception as e:
                 # Something went really wrong, log it and also give the error in twitch chat
                 # Probably best to remove it from twitch chat later
                 print(f"[Bot] Error: {e}")
                 return f"erm what did u do: {e}"
-        return False
-    
+        return None
+
+    async def is_champion(self, champion_name: str):
+        current_champion = await self.get_current_champion()
+        return current_champion == champion_name
