@@ -222,23 +222,35 @@ class TwitchBot:
         return NOT_IN_GAME
 
     async def rank(self):
-        # Bad - should probably have a "main" boolean or get the current account.
-        account = self.db.get_account_by_name_and_tag("backshotsdemon", "delux")
         accounts = self.db.get_all_accounts()
         if len(accounts) == 0:
             return "No accounts configured"
+        # Get rank for currently in game account
         for acc in accounts:
             try:
                 result = await self.riot.get_runes_for(acc)
                 if result is not None:
-                    account = acc
-                    break
+                    return await self.riot.get_rank_for(acc)[0]
             except Exception as e:
                 # Something went really wrong, log it and also give the error in twitch chat
                 # Probably best to remove it from twitch chat later
                 print(f"[Bot] Error: {e}")
                 return f"erm what did u do: {e}"
-        return await self.riot.get_rank_for(account)
+        # Fallback to highest lp account
+        highest_lp = 0
+        res = None
+        for acc in accounts:
+            try:
+                result = await self.riot.get_rank_for(acc)
+                if result[1] > highest_lp:
+                    highest_lp = result[1]
+                    res = result[0]
+            except Exception as e:
+                # Something went really wrong, log it and also give the error in twitch chat
+                # Probably best to remove it from twitch chat later
+                print(f"[Bot] Error: {e}")
+                return f"erm what did u do: {e}"
+        return res
     
     async def get_current_champion(self):
         accounts = self.db.get_all_accounts()

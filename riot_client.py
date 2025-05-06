@@ -81,9 +81,9 @@ class RiotClient:
             if league['queueType'] == "RANKED_SOLO_5x5":
                 # Handle master
                 if league['tier'] == 'MASTER' or league['tier'] == "GRANDMASTER" or league['tier'] == 'CHALLENGER':
-                    return f"{league['tier'].capitalize()} {league['leaguePoints']}LP"
+                    return [f"{league['tier'].capitalize()} {league['leaguePoints']}LP", league['leaguePoints']]
                 else:
-                    return f"{league['tier'].capitalize()} {league['rank']} {league['leaguePoints']}LP"
+                    return [f"{league['tier'].capitalize()} {league['rank']} {league['leaguePoints']}LP", league['leaguePoints']]
 
     async def get_champion_for(self, account: Account) -> str | None:
         if not account.puuid:
