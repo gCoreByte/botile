@@ -45,11 +45,11 @@ class LolprosApi:
             player_name = self._get_player_name(participant, account)
             formatted_string = f"{champion_name} ({player_name})"
             if participant['teamId'] == 100:
-                if player_name is not None:
+                if player_name != "":
                     blue.append(formatted_string)
                 average_blue_lp += participant['ranking']['leaguePoints']
             elif participant['teamId'] == 200:
-                if player_name is not None:
+                if player_name != "":
                     red.append(formatted_string)
                 average_red_lp += participant['ranking']['leaguePoints']
         blue_formatted = f"🟦 (Average LP: {round(average_blue_lp / 5)}): {', '.join(blue)}"
