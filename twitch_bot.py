@@ -230,7 +230,8 @@ class TwitchBot:
             try:
                 result = await self.riot.get_runes_for(acc)
                 if result is not None:
-                    return await self.riot.get_rank_for(acc)[0]
+                    res = await self.riot.get_rank_for(acc)
+                    return res[0]
             except Exception as e:
                 # Something went really wrong, log it and also give the error in twitch chat
                 # Probably best to remove it from twitch chat later
