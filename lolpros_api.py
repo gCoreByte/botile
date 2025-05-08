@@ -18,12 +18,13 @@ class LolprosApi:
         return None
 
     def _dig(self, value, *keys):
+        keys = list(keys)
         if len(keys) == 0 or isinstance(value, str):
             return value
         if value is None:
             return ""
         value = value.get(keys[0], "")
-        return self._dig(value, keys[1:])
+        return self._dig(value, *keys[1:])
 
     def _get_player_name(self, participant: {}, account: Account):
         if participant['riotId'].lower().strip() == account.full_name():
