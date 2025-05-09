@@ -120,6 +120,8 @@ class TwitchBot:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "winterblessed xayah, custom skin from https://www.runeforge.io/post/winterblessed-xayah")
         elif not normalized_content.startswith("!") and "delay" in normalized_content:
             self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "!delay")
+        elif not normalized_content.startswith("!") and ("bald" in normalized_content or "haircut" in normalized_content):
+            self.send_without_mention(os.getenv("TWITCH_CHANNEL"), "true")
         elif not normalized_content.startswith("!") and ("hob" in normalized_content or "hail of blade" in normalized_content):
             text = "LT is really slow to stack and doesn't give too much value when stacked. Because Zeri turns AS past 1.5 into AD, with HOB you get a big burst to AD immediately in fights."
             if "zeri" in normalized_content:
