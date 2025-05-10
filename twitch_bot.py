@@ -129,6 +129,8 @@ class TwitchBot:
             result = await self.is_champion("Zeri")
             if result:
                 self.send(user, os.getenv('TWITCH_CHANNEL'), text)
+        elif user.lower().startswith("pppppp") and "love from thailand <3 :D <3" in normalized_content:
+            self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "love from thailand <3 :D <3")
         # elif "@botile9lol" in normalized_content and "sentient" in normalized_content:
         #    self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
         # elif (not normalized_content.startswith("!")) and "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
