@@ -139,7 +139,7 @@ class TwitchBot:
         elif not normalized_content.startswith("!") and ("bald" in normalized_content or "haircut" in normalized_content):
             self.send_without_mention(os.getenv("TWITCH_CHANNEL"), "true")
             self.last_message_sent_at = current_time
-        elif not normalized_content.startswith("!") and ("hob" in normalized_content or "hail of blade" in normalized_content):
+        elif "hob" in normalized_content or "hail of blade" in normalized_content:
             text = "LT is really slow to stack and doesn't give too much value when stacked. Because Zeri turns AS past 1.5 into AD, with HOB you get a big burst to AD immediately in fights."
             if "zeri" in normalized_content:
                 self.send(user, os.getenv('TWITCH_CHANNEL'), text)
