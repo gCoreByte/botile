@@ -149,9 +149,6 @@ class TwitchBot:
             if result:
                 self.send(user, os.getenv('TWITCH_CHANNEL'), text)
                 self.last_message_sent_at = current_time
-        elif user.lower().startswith("pppppp") and "love from thailand <3 :D <3" in normalized_content:
-            self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "love from thailand <3 :D <3")
-            self.last_message_sent_at = current_time
         elif is_admin(user) and normalized_content.startswith("!"):
             if normalized_content.startswith("!add"):
                 name, tag = normalized_content.removeprefix("!add ").split("#")
