@@ -3,6 +3,7 @@ import random
 import ssl
 import aiohttp
 import asyncio
+import time
 from riot_client import RiotClient
 from lolpros_api import LolprosApi
 from db import Database, Account
@@ -10,6 +11,7 @@ from db import Database, Account
 ADMIN_USERS = ["reptile9lol", "gcorebyte", "k1mbo9lol"]
 
 NOT_IN_GAME = "Reptile is currently not in game"
+COOLDOWN_TIME = 10
 
 def is_admin(user: str):
     # This should probably check if the user is a mod too
@@ -25,6 +27,7 @@ class TwitchBot:
         self.db = Database()
         self.count = 1
         self.previous_message = ""
+        self.last_message_sent_at = 0  # Initialize to 0 to allow first message
 
     async def connect(self):
         # https://docs.python.org/3/library/ssl.html#ssl-security
@@ -80,6 +83,11 @@ class TwitchBot:
     # Probably best to add a self.commands = {} type object
     # Where the key is the string and the value is the function to run
     async def handle_command(self, message):
+        # Check rate limiting
+        current_time = time.time()
+        if current_time - self.last_message_sent_at < COOLDOWN_TIME:
+            return  # Skip processing if less than 10 seconds have passed
+
         user = message.split("!", 1)[0][1:]
         content: str = message.split(":", 2)[2]
         if user.lower() == "nightbot" or user.lower() == "botile9lol":
@@ -94,68 +102,78 @@ class TwitchBot:
         if normalized_content.startswith("!runes"):
             result = await self.runes()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+            self.last_message_sent_at = current_time
         elif normalized_content.startswith("!pros"):
             result = await self.pros()
             if result is None:
                 result = NOT_IN_GAME
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+            self.last_message_sent_at = current_time
         elif normalized_content.startswith("!rank"):
             result = await self.rank()
             self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+            self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and "skin" in normalized_content and ("what" in normalized_content or "which" in normalized_content):
             current_champion = await self.get_current_champion()
             if current_champion == "Zeri":
                 self.send(user, os.getenv('TWITCH_CHANNEL'), "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
+                self.last_message_sent_at = current_time
             elif current_champion == "Vayne":
                 self.send(user, os.getenv('TWITCH_CHANNEL'), "kda all out vayne, custom skin from https://www.runeforge.io/post/k-da-all-out-vayne")
+                self.last_message_sent_at = current_time
             elif current_champion == "Xayah":
                 self.send(user, os.getenv('TWITCH_CHANNEL'), "winterblessed xayah, custom skin from https://www.runeforge.io/post/winterblessed-xayah")
+                self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and "zeri" in normalized_content and "skin" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
+            self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and "vayne" in normalized_content and "skin" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "kda all out vayne, custom skin from https://www.runeforge.io/post/k-da-all-out-vayne")
-        #elif not normalized_content.startswith("!") and "jhin" in normalized_content and "skin" in normalized_content:
-            #self.send(user, os.getenv('TWITCH_CHANNEL'), "spirit blossom jhin, custom skin from https://runeforge.dev/mods/16e6bd39-df9e-4e02-b2d1-71a1b814eb94")
+            self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and "xayah" in normalized_content and "skin" in normalized_content:
             self.send(user, os.getenv('TWITCH_CHANNEL'), "winterblessed xayah, custom skin from https://www.runeforge.io/post/winterblessed-xayah")
+            self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and "delay" in normalized_content:
             self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "!delay")
+            self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and ("bald" in normalized_content or "haircut" in normalized_content):
             self.send_without_mention(os.getenv("TWITCH_CHANNEL"), "true")
+            self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and ("hob" in normalized_content or "hail of blade" in normalized_content):
             text = "LT is really slow to stack and doesn't give too much value when stacked. Because Zeri turns AS past 1.5 into AD, with HOB you get a big burst to AD immediately in fights."
             if "zeri" in normalized_content:
-                return self.send(user, os.getenv('TWITCH_CHANNEL'), text)
+                self.send(user, os.getenv('TWITCH_CHANNEL'), text)
+                self.last_message_sent_at = current_time
+                return
             result = await self.is_champion("Zeri")
             if result:
                 self.send(user, os.getenv('TWITCH_CHANNEL'), text)
+                self.last_message_sent_at = current_time
         elif user.lower().startswith("pppppp") and "love from thailand <3 :D <3" in normalized_content:
             self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "love from thailand <3 :D <3")
-        # elif "@botile9lol" in normalized_content and "sentient" in normalized_content:
-        #    self.send(user, os.getenv('TWITCH_CHANNEL'), "yea bro im sentient")
-        # elif (not normalized_content.startswith("!")) and "@botile9" in normalized_content and ("can" in normalized_content or "would" in normalized_content or "do" in normalized_content or "is" in normalized_content or "are" in normalized_content or "will"):
-        #    self.send(user, os.getenv('TWITCH_CHANNEL'), random.choice(["yea", "nah", "maybe"]))
-        # elif not normalized_content.startswith("!") and "@botile9" in normalized_content and "hi" in normalized_content:
-        #    self.send(user, os.getenv('TWITCH_CHANNEL'), "hi")
-        # elif not normalized_content.startswith("!") and "@botile9" in normalized_content and "bye" in normalized_content:
-        #    self.send(user, os.getenv('TWITCH_CHANNEL'), "bye")
+            self.last_message_sent_at = current_time
         elif is_admin(user) and normalized_content.startswith("!"):
             if normalized_content.startswith("!add"):
                 name, tag = normalized_content.removeprefix("!add ").split("#")
                 result = await self.add_account(name, tag)
                 self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+                self.last_message_sent_at = current_time
             elif normalized_content.startswith("!delete"):
                 name, tag = normalized_content.removeprefix("!delete ").split("#")
                 result = await self.delete_account(name, tag)
                 self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+                self.last_message_sent_at = current_time
             elif normalized_content.startswith("!accounts"):
                 result = await self.accounts()
                 self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+                self.last_message_sent_at = current_time
             elif normalized_content.startswith("!restart"):
                 self.send(user, os.getenv('TWITCH_CHANNEL'), "Restarting...")
+                self.last_message_sent_at = current_time
                 exit(0)
             elif normalized_content.startswith("!s "):
                 self.send_without_mention(os.getenv('TWITCH_CHANNEL'), content.removeprefix("!s "))
+                self.last_message_sent_at = current_time
         else:
             # Hack - join emote walls
             if content.strip() == self.previous_message:
