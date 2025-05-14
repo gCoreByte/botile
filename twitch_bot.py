@@ -44,6 +44,7 @@ class TwitchBot:
         self._send(f"PASS {os.getenv('TWITCH_TOKEN')}")
         self._send(f"NICK {os.getenv('TWITCH_NICK')}")
         self._send(f"JOIN {os.getenv('TWITCH_CHANNEL')}")
+        self._send(f"JOIN #gcorebyte")
         # self._send(f"CAP REQ :twitch.tv/tags")
         print("[Bot] Connected to Twitch")
 
