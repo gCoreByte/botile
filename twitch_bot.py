@@ -98,6 +98,7 @@ class TwitchBot:
         content = content.removesuffix("  󠀀") # 7tv send twice hack
         content = content.removesuffix(" 󠀀")
         content = content.strip()
+        channel = message.split(":", 2)[1].strip()
         normalized_content = content.lower()
 
         if self.quiet and (not normalized_content.startswith("!") or not is_admin(user)):
@@ -106,82 +107,82 @@ class TwitchBot:
         # FIXME
         if normalized_content.startswith("!runes"):
             result = await self.runes()
-            self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+            self.send(user, channel, result)
             self.last_message_sent_at = current_time
         elif normalized_content.startswith("!pros"):
             result = await self.pros()
             if result is None:
                 result = NOT_IN_GAME
-            self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+            self.send(user, channel, result)
             self.last_message_sent_at = current_time
         elif normalized_content.startswith("!rank"):
             result = await self.rank()
-            self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+            self.send(user, channel, result)
             self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and "skin" in normalized_content and ("what" in normalized_content or "which" in normalized_content):
             current_champion = await self.get_current_champion()
             if current_champion == "Zeri":
-                self.send(user, os.getenv('TWITCH_CHANNEL'), "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
+                self.send(user, channel, "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
                 self.last_message_sent_at = current_time
             elif current_champion == "Vayne":
-                self.send(user, os.getenv('TWITCH_CHANNEL'), "kda all out vayne, custom skin from https://www.runeforge.io/post/k-da-all-out-vayne")
+                self.send(user, channel, "kda all out vayne, custom skin from https://www.runeforge.io/post/k-da-all-out-vayne")
                 self.last_message_sent_at = current_time
             elif current_champion == "Xayah":
-                self.send(user, os.getenv('TWITCH_CHANNEL'), "winterblessed xayah, custom skin from https://www.runeforge.io/post/winterblessed-xayah")
+                self.send(user, channel, "winterblessed xayah, custom skin from https://www.runeforge.io/post/winterblessed-xayah")
                 self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and "zeri" in normalized_content and "skin" in normalized_content:
-            self.send(user, os.getenv('TWITCH_CHANNEL'), "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
+            self.send(user, channel, "high noon zeri, custom skin from https://runeforge.dev/mods/f03862cc-4324-4f18-bd64-df0c376785cb")
             self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and "vayne" in normalized_content and "skin" in normalized_content:
-            self.send(user, os.getenv('TWITCH_CHANNEL'), "kda all out vayne, custom skin from https://www.runeforge.io/post/k-da-all-out-vayne")
+            self.send(user, channel, "kda all out vayne, custom skin from https://www.runeforge.io/post/k-da-all-out-vayne")
             self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and "xayah" in normalized_content and "skin" in normalized_content:
-            self.send(user, os.getenv('TWITCH_CHANNEL'), "winterblessed xayah, custom skin from https://www.runeforge.io/post/winterblessed-xayah")
+            self.send(user, channel, "winterblessed xayah, custom skin from https://www.runeforge.io/post/winterblessed-xayah")
             self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and "delay" in normalized_content:
-            self.send_without_mention(os.getenv('TWITCH_CHANNEL'), "!delay")
+            self.send_without_mention(channel, "!delay")
             self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and ("bald" in normalized_content or "haircut" in normalized_content):
-            self.send_without_mention(os.getenv("TWITCH_CHANNEL"), "true")
+            self.send_without_mention(channel, "true")
             self.last_message_sent_at = current_time
         elif "hob" in normalized_content or "hail of blade" in normalized_content:
             text = "LT is really slow to stack and doesn't give too much value when stacked. Because Zeri turns AS past 1.5 into AD, with HOB you get a big burst to AD immediately in fights."
             if "zeri" in normalized_content:
-                self.send(user, os.getenv('TWITCH_CHANNEL'), text)
+                self.send(user, channel, text)
                 self.last_message_sent_at = current_time
                 return
             result = await self.is_champion("Zeri")
             if result:
-                self.send(user, os.getenv('TWITCH_CHANNEL'), text)
+                self.send(user, channel, text)
                 self.last_message_sent_at = current_time
         elif is_admin(user) and normalized_content.startswith("!"):
             if normalized_content.startswith("!add"):
                 name, tag = normalized_content.removeprefix("!add ").split("#")
                 result = await self.add_account(name, tag)
-                self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+                self.send(user, channel, result)
                 self.last_message_sent_at = current_time
             elif normalized_content.startswith("!delete"):
                 name, tag = normalized_content.removeprefix("!delete ").split("#")
                 result = await self.delete_account(name, tag)
-                self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+                self.send(user, channel, result)
                 self.last_message_sent_at = current_time
             elif normalized_content.startswith("!accounts"):
                 result = await self.accounts()
-                self.send(user, os.getenv('TWITCH_CHANNEL'), result)
+                self.send(user, channel, result)
                 self.last_message_sent_at = current_time
             elif normalized_content.startswith("!restart"):
-                self.send(user, os.getenv('TWITCH_CHANNEL'), "Restarting...")
+                self.send(user, channel, "Restarting...")
                 self.last_message_sent_at = current_time
                 exit(0)
             elif normalized_content.startswith("!s "):
-                self.send_without_mention(os.getenv('TWITCH_CHANNEL'), content.removeprefix("!s "))
+                self.send_without_mention(channel, content.removeprefix("!s "))
                 self.last_message_sent_at = current_time
             elif normalized_content.startswith("!stfu"):
                 self.quiet = True
-                self.send(user, os.getenv('TWITCH_CHANNEL'), "stfuing bye")
+                self.send(user, channel, "stfuing bye")
             elif normalized_content.startswith("!speak"):
                 self.quiet = False
-                self.send(user, os.getenv('TWITCH_CHANNEL'), "hi")
+                self.send(user, channel, "hi")
         else:
             # Hack - join emote walls
             if content.strip() == self.previous_message:
@@ -193,7 +194,7 @@ class TwitchBot:
                 else:
                     self.previous_message = content.strip()
         if self.count == 4:
-            self.send_without_mention(os.getenv('TWITCH_CHANNEL'), self.previous_message)
+            self.send_without_mention(channel, self.previous_message)
 
     # Move to own module
     async def runes(self):
