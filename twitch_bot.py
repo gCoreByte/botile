@@ -4,6 +4,7 @@ import ssl
 import aiohttp
 import asyncio
 import time
+import re
 from riot_client import RiotClient
 from lolpros_api import LolprosApi
 from db import Database, Account
@@ -98,8 +99,9 @@ class TwitchBot:
         content = content.removesuffix("  󠀀") # 7tv send twice hack
         content = content.removesuffix(" 󠀀")
         content = content.strip()
-        channel = message.split(":", 2)[1].strip()
         normalized_content = content.lower()
+        match = re.search(r'PRIVMSG\s+(#[^\s:]+)\s+:', message)
+        channel = match.group(1).strip()
 
         if self.quiet and (not normalized_content.startswith("!") or not is_admin(user)):
             return
