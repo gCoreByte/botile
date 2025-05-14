@@ -84,8 +84,6 @@ class TwitchBot:
     # Probably best to add a self.commands = {} type object
     # Where the key is the string and the value is the function to run
     async def handle_command(self, message):
-        if self.quiet:
-            return
         # Check rate limiting
         current_time = time.time()
         if current_time - self.last_message_sent_at < COOLDOWN_TIME:
@@ -100,6 +98,9 @@ class TwitchBot:
         content = content.removesuffix(" 󠀀")
         content = content.strip()
         normalized_content = content.lower()
+
+        if self.quiet and (not normalized_content.startswith("!") or not is_admin(user)):
+            return
 
         # FIXME
         if normalized_content.startswith("!runes"):
