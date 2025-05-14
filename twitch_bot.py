@@ -28,6 +28,7 @@ class TwitchBot:
         self.count = 1
         self.previous_message = ""
         self.last_message_sent_at = 0  # Initialize to 0 to allow first message
+        self.quiet = False
 
     async def connect(self):
         # https://docs.python.org/3/library/ssl.html#ssl-security
@@ -83,6 +84,8 @@ class TwitchBot:
     # Probably best to add a self.commands = {} type object
     # Where the key is the string and the value is the function to run
     async def handle_command(self, message):
+        if self.quiet:
+            return
         # Check rate limiting
         current_time = time.time()
         if current_time - self.last_message_sent_at < COOLDOWN_TIME:
@@ -171,6 +174,12 @@ class TwitchBot:
             elif normalized_content.startswith("!s "):
                 self.send_without_mention(os.getenv('TWITCH_CHANNEL'), content.removeprefix("!s "))
                 self.last_message_sent_at = current_time
+            elif normalized_content.startswith("!stfu"):
+                self.quiet = True
+                self.send(user, os.getenv('TWITCH_CHANNEL'), "stfuing")
+            elif normalized_content.startswith("!speak"):
+                self.quiet = False
+                self.send(user, os.getenv('TWITCH_CHANNEL'), "hi")
         else:
             # Hack - join emote walls
             if content.strip() == self.previous_message:
