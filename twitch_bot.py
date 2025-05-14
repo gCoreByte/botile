@@ -176,7 +176,7 @@ class TwitchBot:
                 self.last_message_sent_at = current_time
             elif normalized_content.startswith("!stfu"):
                 self.quiet = True
-                self.send(user, os.getenv('TWITCH_CHANNEL'), "stfuing")
+                self.send(user, os.getenv('TWITCH_CHANNEL'), "stfuing bye")
             elif normalized_content.startswith("!speak"):
                 self.quiet = False
                 self.send(user, os.getenv('TWITCH_CHANNEL'), "hi")
