@@ -151,9 +151,6 @@ class TwitchBot:
         elif not normalized_content.startswith("!") and "xayah" in normalized_content and "skin" in normalized_content:
             self.send(user, channel, "winterblessed xayah, custom skin from https://www.runeforge.io/post/winterblessed-xayah")
             self.last_message_sent_at = current_time
-        elif not normalized_content.startswith("!") and "delay" in normalized_content:
-            self.send_without_mention(channel, "!delay")
-            self.last_message_sent_at = current_time
         elif not normalized_content.startswith("!") and ("bald" in normalized_content or "haircut" in normalized_content):
             self.send_without_mention(channel, "true")
             self.last_message_sent_at = current_time
