@@ -12,6 +12,7 @@ from db import Database, Account
 ADMIN_USERS = ["reptile9lol", "gcorebyte", "k1mbo9lol"]
 
 NOT_IN_GAME = "Reptile is currently not in game"
+SCRIMS = "reptile is currently in scrims, some commands are currently disabled"
 COOLDOWN_TIME = 10
 
 def is_admin(user: str):
@@ -30,6 +31,7 @@ class TwitchBot:
         self.previous_message = ""
         self.last_message_sent_at = 0  # Initialize to 0 to allow first message
         self.quiet = False
+        self.scrims = False
 
     async def connect(self):
         # https://docs.python.org/3/library/ssl.html#ssl-security
@@ -108,10 +110,18 @@ class TwitchBot:
 
         # FIXME
         if normalized_content.startswith("!runes"):
+            if self.scrims:
+                self.send(user, channel, SCRIMS)
+                self.last_message_sent_at = current_time
+                return
             result = await self.runes()
             self.send(user, channel, result)
             self.last_message_sent_at = current_time
         elif normalized_content.startswith("!pros"):
+            if self.scrims:
+                self.send(user, channel, SCRIMS)
+                self.last_message_sent_at = current_time
+                return
             result = await self.pros()
             if result is None:
                 result = NOT_IN_GAME
@@ -191,6 +201,14 @@ class TwitchBot:
             elif normalized_content.startswith("!speak"):
                 self.quiet = False
                 self.send(user, channel, "hi")
+            elif normalized_content.startswith("!scrims"):
+                self.scrims = True
+                self.send(user, channel, "gl in scrims bro")
+                self.last_message_sent_at = current_time
+            elif normalized_content.startswith("!live"):
+                self.scrims = False
+                self.send(user, channel, "20 game winstreak coming")
+                self.last_message_sent_at = current_time
         else:
             # Hack - join emote walls
             if content.strip() == self.previous_message:
