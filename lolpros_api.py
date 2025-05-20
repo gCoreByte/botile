@@ -30,6 +30,22 @@ class LolprosApi:
         if participant['riotId'].lower().strip() == account.full_name():
             return "CGN Reptile"
         return f"{self._dig(participant['lolpros'], 'team', 'tag')} {self._dig(participant['lolpros'], 'name')}".strip()
+    
+    def _get_role(self, participant: {}, account: Account):
+        if account.full_name() == participant['riotId'].lower().strip():
+            return ", ADC"
+        role = self._dig(participant['lolpros'], 'position')
+        if "top" in role:
+            return ", Top"
+        elif "jungle" in role:
+            return ", Jungle"
+        elif "mid" in role:
+            return ", Mid"
+        elif "supp" in role:
+            return ", Support"
+        elif "adc" in role:
+            return ", ADC"
+        return ""
 
     async def get_all_pro_names(self, account: Account):
         data = await self._get_lolpros_data(account)
@@ -44,7 +60,8 @@ class LolprosApi:
         for participant in data['participants']:
             champion_name = champion_data[participant['championId']]['name']
             player_name = self._get_player_name(participant, account)
-            formatted_string = f"{champion_name} ({player_name})"
+            role = self._get_role(participant, account)
+            formatted_string = f"{champion_name} ({player_name}{role})"
             if participant['teamId'] == 100:
                 if player_name != "":
                     blue.append(formatted_string)
