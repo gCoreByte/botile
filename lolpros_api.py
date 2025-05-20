@@ -36,15 +36,15 @@ class LolprosApi:
             return ", ADC"
         role = self._dig(participant['lolpros'], 'position')
         if "top" in role:
-            return ", Top"
+            return " | Top"
         elif "jungle" in role:
-            return ", Jungle"
+            return " | Jungle"
         elif "mid" in role:
-            return ", Mid"
+            return " | Mid"
         elif "supp" in role:
-            return ", Support"
+            return " | Supp"
         elif "adc" in role:
-            return ", ADC"
+            return " | Bot"
         return ""
 
     async def get_all_pro_names(self, account: Account):
