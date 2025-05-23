@@ -33,7 +33,7 @@ class LolprosApi:
     
     def _get_role(self, participant: {}, account: Account):
         if account.full_name() == participant['riotId'].lower().strip():
-            return ", ADC"
+            return " | Bot"
         role = self._dig(participant['lolpros'], 'position')
         if "top" in role:
             return " | Top"
