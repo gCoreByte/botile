@@ -14,7 +14,7 @@ ADMIN_USERS = ["reptile9lol", "gcorebyte", "k1mbo9lol"]
 
 NOT_IN_GAME = "Reptile is currently not in game"
 SCRIMS = "reptile is currently in scrims, some commands are currently disabled"
-COOLDOWN_TIME = 10
+COOLDOWN_TIME = 3
 
 def is_admin(user: str):
     # This should probably check if the user is a mod too
