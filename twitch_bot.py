@@ -7,6 +7,7 @@ import time
 import re
 from riot_client import RiotClient
 from lolpros_api import LolprosApi
+from deeplol_api import DeepLolApi
 from db import Database, Account
 
 ADMIN_USERS = ["reptile9lol", "gcorebyte", "k1mbo9lol"]
@@ -129,6 +130,10 @@ class TwitchBot:
             self.last_message_sent_at = current_time
         elif normalized_content.startswith("!rank"):
             result = await self.rank()
+            self.send(user, channel, result)
+            self.last_message_sent_at = current_time
+        elif normalized_content.startswith("!cutoff"):
+            result = await self.cutoff()
             self.send(user, channel, result)
             self.last_message_sent_at = current_time
         elif is_admin(user) and normalized_content.startswith("!"):
@@ -287,3 +292,9 @@ class TwitchBot:
     async def is_champion(self, champion_name: str):
         current_champion = await self.get_current_champion()
         return current_champion == champion_name
+    
+    async def cutoff(self):
+        data = await self.deeplol.get_cutoff_data()
+        if data is None:
+            return "Failed to get cutoff data"
+        return f"Challenger: {data['challenger']}LP | Grandmaster: {data['grandmaster']}LP"
