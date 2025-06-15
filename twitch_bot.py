@@ -247,33 +247,33 @@ class TwitchBot:
         accounts = self.db.get_all_accounts()
         if len(accounts) == 0:
             return "No accounts configured"
-        # Get rank for currently in game account
-        for acc in accounts:
-            try:
-                result = await self.riot.get_runes_for(acc)
-                if result is not None:
-                    res = await self.riot.get_rank_for(acc)
-                    return res[0]
-            except Exception as e:
-                # Something went really wrong, log it and also give the error in twitch chat
-                # Probably best to remove it from twitch chat later
-                print(f"[Bot] Error: {e}")
-                return f"erm what did u do: {e}"
-        # Fallback to highest lp account
+        
         highest_lp = 0
-        res = None
+        highest_rank = None
+        current_rank = None
+        
+        # Check all accounts once for both in-game status and rank
         for acc in accounts:
             try:
-                result = await self.riot.get_rank_for(acc)
-                if result[1] > highest_lp:
-                    highest_lp = result[1]
-                    res = result[0]
+                # First check if in game
+                in_game = await self.riot.get_runes_for(acc)
+                rank_result = await self.riot.get_rank_for(acc)
+                
+                # Update highest LP if needed
+                if rank_result[1] > highest_lp:
+                    highest_lp = rank_result[1]
+                    highest_rank = rank_result[0]
+                
+                # If in game, set as current rank
+                if in_game is not None:
+                    current_rank = rank_result[0]
             except Exception as e:
-                # Something went really wrong, log it and also give the error in twitch chat
-                # Probably best to remove it from twitch chat later
                 print(f"[Bot] Error: {e}")
                 return f"erm what did u do: {e}"
-        return res
+        
+        if current_rank:
+            return f"Highest: {highest_rank} | Current: {current_rank}"
+        return highest_rank
     
     async def get_current_champion(self):
         accounts = self.db.get_all_accounts()
