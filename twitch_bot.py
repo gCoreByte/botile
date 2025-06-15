@@ -299,4 +299,34 @@ class TwitchBot:
         data = await self.deeplol.get_cutoff_data()
         if data is None:
             return "Failed to get cutoff data"
-        return f"Challenger: {data['challenger']}LP | Grandmaster: {data['grandmaster']}LP"
+        
+        # Calculate time until 1:45 GMT+3 (22:45 UTC)
+        now_utc = time.gmtime()
+        target_hour = 22  # 1:45 GMT+3 = 22:45 UTC
+        target_minute = 45
+        
+        # Create target time for today in UTC
+        target_time = time.struct_time((
+            now_utc.tm_year, now_utc.tm_mon, now_utc.tm_mday,
+            target_hour, target_minute, 0,
+            now_utc.tm_wday, now_utc.tm_yday, now_utc.tm_isdst
+        ))
+        
+        # Convert to seconds since epoch
+        now_seconds = time.mktime(now_utc)
+        target_seconds = time.mktime(target_time)
+        
+        # If target time has passed today, add 24 hours
+        if target_seconds < now_seconds:
+            target_seconds += 24 * 3600
+            
+        # Calculate remaining seconds
+        remaining_seconds = int(target_seconds - now_seconds)
+        
+        # Convert to HH:MM:SS
+        hours = remaining_seconds // 3600
+        minutes = (remaining_seconds % 3600) // 60
+        seconds = remaining_seconds % 60
+        time_to_update = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        
+        return f"Challenger: {data['challenger']}LP | Grandmaster: {data['grandmaster']}LP | Next update in {time_to_update}"
