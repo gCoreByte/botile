@@ -27,6 +27,7 @@ class TwitchBot:
         self.writer = None
         self.riot = None
         self.lolpros = None
+        self.deeplol = None
         self.db = Database()
         self.count = 1
         self.previous_message = ""
@@ -71,6 +72,7 @@ class TwitchBot:
         async with aiohttp.ClientSession() as session:
             self.riot = RiotClient(session)
             self.lolpros = LolprosApi(session)
+            self.deeplol = DeepLolApi(session)
             while True:
                 line = await self.reader.readline()
                 if not line:
