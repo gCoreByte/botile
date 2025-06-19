@@ -8,7 +8,7 @@ import re
 from riot_client import RiotClient
 from lolpros_api import LolprosApi
 from deeplol_api import DeepLolApi
-from db import Database, Account
+from db import Database, Account, Command
 
 ADMIN_USERS = ["reptile9lol", "gcorebyte", "k1mbo9lol"]
 
@@ -139,7 +139,40 @@ class TwitchBot:
             self.send(user, channel, result)
             self.last_message_sent_at = current_time
         elif is_admin(user) and normalized_content.startswith("!"):
-            if normalized_content.startswith("!add"):
+            if normalized_content.startswith("!addcmd"):
+                # Format: !addcmd name keyword1,keyword2:message
+                parts = normalized_content.removeprefix("!addcmd ").split(":", 1)
+                if len(parts) == 2:
+                    name_and_keywords, message = parts
+                    # Split name and keywords (name is first word, rest are keywords)
+                    name_keywords_parts = name_and_keywords.split(" ", 1)
+                    if len(name_keywords_parts) == 2:
+                        name, keywords_str = name_keywords_parts
+                        keywords = [kw.strip() for kw in keywords_str.split(",")]
+                        result = await self.add_keyword_command(channel, name, keywords, message)
+                        self.send(user, channel, result)
+                        self.last_message_sent_at = current_time
+                    else:
+                        self.send(user, channel, "Usage: !addcmd name keyword1,keyword2:message")
+                        self.last_message_sent_at = current_time
+                else:
+                    self.send(user, channel, "Usage: !addcmd name keyword1,keyword2:message")
+                    self.last_message_sent_at = current_time
+            elif normalized_content.startswith("!delcmd"):
+                # Format: !delcmd name
+                name = normalized_content.removeprefix("!delcmd ").strip()
+                if name:
+                    result = await self.delete_keyword_command(channel, name)
+                    self.send(user, channel, result)
+                    self.last_message_sent_at = current_time
+                else:
+                    self.send(user, channel, "Usage: !delcmd name")
+                    self.last_message_sent_at = current_time
+            elif normalized_content.startswith("!cmds"):
+                result = await self.list_keyword_commands(channel)
+                self.send(user, channel, result)
+                self.last_message_sent_at = current_time
+            elif normalized_content.startswith("!add"):
                 name, tag = normalized_content.removeprefix("!add ").split("#")
                 result = await self.add_account(name, tag)
                 self.send(user, channel, result)
@@ -153,6 +186,7 @@ class TwitchBot:
                 result = await self.accounts()
                 self.send(user, channel, result)
                 self.last_message_sent_at = current_time
+
             elif normalized_content.startswith("!restart"):
                 self.send(user, channel, "Restarting...")
                 self.last_message_sent_at = current_time
@@ -175,6 +209,15 @@ class TwitchBot:
                 self.send(user, channel, "20 game winstreak coming")
                 self.last_message_sent_at = current_time
         else:
+            # Check for keyword matches in command database when no commands have matched
+            # Split content into words for keyword matching
+            words = content.split()
+            if words:
+                # Find command with most matching keywords
+                matched_command = self.db.find_command_with_most_matching_keywords(channel, words)
+                if matched_command:
+                    self.send(user, channel, matched_command.message)
+                    self.last_message_sent_at = current_time
             # Hack - join emote walls
             if content.strip() == self.previous_message:
                 self.count += 1
@@ -330,3 +373,30 @@ class TwitchBot:
         time_to_update = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         
         return f"Challenger: {data['challenger']}LP | Grandmaster: {data['grandmaster']}LP | Next update in {time_to_update}"
+
+    # Keyword command management methods
+    async def add_keyword_command(self, channel: str, name: str, keywords: list[str], message: str):
+        # Check if command already exists
+        existing_command = self.db.get_command_by_name_and_channel(name, channel)
+        if existing_command:
+            return f"Command '{name}' already exists in this channel"
+        
+        command = Command(name=name, channel_name=channel, keywords=keywords, message=message)
+        command.save()
+        return f"Added keyword command '{name}': '{', '.join(keywords)}' -> '{message}'"
+
+    async def delete_keyword_command(self, channel: str, name: str):
+        command = self.db.get_command_by_name_and_channel(name, channel)
+        if command:
+            command.delete()
+            return f"Deleted keyword command '{name}'"
+        return f"Keyword command '{name}' not found in this channel"
+
+    async def list_keyword_commands(self, channel: str):
+        commands = self.db.get_commands_by_channel(channel)
+        
+        if len(commands) == 0:
+            return "No keyword commands configured for this channel"
+        
+        command_names = [cmd.name for cmd in commands]
+        return f"Commands: {', '.join(command_names)}"
