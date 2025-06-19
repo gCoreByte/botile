@@ -210,14 +210,20 @@ class TwitchBot:
                 self.last_message_sent_at = current_time
         else:
             # Check for keyword matches in command database when no commands have matched
-            # Split content into words for keyword matching
-            words = content.split()
-            if words:
-                # Find command with most matching keywords
-                matched_command = self.db.find_command_with_most_matching_keywords(channel, words)
-                if matched_command:
-                    self.send(user, channel, matched_command.message)
-                    self.last_message_sent_at = current_time
+            # First check for phrase matches (keywords with spaces) in the original content
+            matched_command = self.db.find_command_with_phrase_match(channel, content)
+            if matched_command:
+                self.send(user, channel, matched_command.message)
+                self.last_message_sent_at = current_time
+            else:
+                # If no phrase match, check for individual word matches
+                words = content.split()
+                if words:
+                    # Find command with most matching keywords
+                    matched_command = self.db.find_command_with_most_matching_keywords(channel, words)
+                    if matched_command:
+                        self.send(user, channel, matched_command.message)
+                        self.last_message_sent_at = current_time
             # Hack - join emote walls
             if content.strip() == self.previous_message:
                 self.count += 1

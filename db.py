@@ -241,3 +241,38 @@ class Database:
         # Only return a match if at least one keyword matched
         return best_match if best_match_count > 0 else None
 
+    def find_command_with_phrase_match(self, channel_name: str, content: str):
+        """
+        Find a command that has a keyword containing spaces that matches the content (case-insensitive).
+        Returns the first matching command, or None if no matches.
+        """
+        cursor = self.cursor()
+        
+        # Get all commands for the channel
+        cursor.execute("SELECT * FROM commands WHERE channel_name = ?", (channel_name.lower().strip(),))
+        records = cursor.fetchall()
+        
+        if not records:
+            return None
+        
+        # Normalize content to lowercase
+        content_lower = content.lower().strip()
+        
+        for record in records:
+            # Get stored keywords and normalize them
+            stored_keywords = [kw.strip() for kw in record["keywords"].split(",")]
+            
+            # Check if any keyword contains spaces and matches the content
+            for keyword in stored_keywords:
+                if " " in keyword and keyword.lower() in content_lower:
+                    return Command(
+                        id=record["id"], 
+                        name=record["name"], 
+                        channel_name=record["channel_name"], 
+                        keywords=stored_keywords, 
+                        message=record["message"], 
+                        persisted=True
+                    )
+        
+        return None
+
