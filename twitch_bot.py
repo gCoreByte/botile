@@ -135,7 +135,8 @@ class TwitchBot:
             self.send(user, channel, result)
             self.last_message_sent_at = current_time
         elif normalized_content.startswith("!cutoff"):
-            result = await self.cutoff()
+            # result = await self.cutoff()
+            result = "Currently disabled."
             self.send(user, channel, result)
             self.last_message_sent_at = current_time
         elif is_admin(user) and normalized_content.startswith("!"):
