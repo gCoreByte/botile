@@ -308,6 +308,8 @@ class TwitchBot:
                 # First check if in game
                 in_game = await self.riot.get_runes_for(acc)
                 rank_result = await self.riot.get_rank_for(acc)
+                if rank_result is None:
+                    continue
                 
                 # Update highest LP if needed
                 if rank_result[1] > highest_lp:
