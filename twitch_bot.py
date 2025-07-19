@@ -140,7 +140,7 @@ class TwitchBot:
             self.send(user, channel, result)
             self.last_message_sent_at = current_time
         elif normalized_content.startswith("!wiki"):
-            parts = normalized_content.removeprefix("!wiki ").split(" ", 1)
+            parts = normalized_content.removeprefix("!wiki ").split()
             result = f"https://wiki.leagueoflegends.com/en-us/{'_'.join(part.capitalize() for part in parts)}"
             self.send(user, channel, result)
         elif is_admin(user) and normalized_content.startswith("!"):
