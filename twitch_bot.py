@@ -312,6 +312,8 @@ class TwitchBot:
                 # First check if in game
                 in_game = await self.riot.get_runes_for(acc)
                 rank_result = await self.riot.get_rank_for(acc)
+                if rank_result is None:
+                    continue
                 
                 # Update highest LP if needed
                 if rank_result[1] > highest_lp:
@@ -324,10 +326,12 @@ class TwitchBot:
             except Exception as e:
                 print(f"[Bot] Error: {e}")
                 return f"erm what did u do: {e}"
-        
         if current_rank:
-            return f"Highest: {highest_rank} | Current: {current_rank}"
-        return highest_rank
+            return f"Current: {current_rank}"
+        return NOT_IN_GAME
+        #if current_rank:
+        #    return f"Highest: {highest_rank} | Current: {current_rank}"
+        #return highest_rank
     
     async def get_current_champion(self):
         accounts = self.db.get_all_accounts()
