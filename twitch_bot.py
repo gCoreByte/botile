@@ -177,6 +177,10 @@ class TwitchBot:
                 result = await self.list_keyword_commands(channel)
                 self.send(user, channel, result)
                 self.last_message_sent_at = current_time
+            elif normalized_content.startswith("!showcmd"):
+                result = await self.show_command(channel, normalized_content.removeprefix("!showcmd "))
+                self.send(user, channel, result)
+                self.last_message_sent_at = current_time
             elif normalized_content.startswith("!add"):
                 name, tag = normalized_content.removeprefix("!add ").split("#")
                 result = await self.add_account(name, tag)
@@ -415,3 +419,9 @@ class TwitchBot:
         
         command_names = [cmd.name for cmd in commands]
         return f"Commands: {', '.join(command_names)}"
+
+    async def show_command(self, channel: str, name: str):
+        command = self.db.get_command_by_name_and_channel(name, channel)
+        if command:
+            return f"Command '{name}': '{', '.join(command.keywords)}' -> '{command.message}'"
+        return f"Command '{name}' not found in this channel"
