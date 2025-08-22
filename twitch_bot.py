@@ -140,7 +140,8 @@ class TwitchBot:
                 # Format: !addcmd name keyword1,keyword2:message
                 parts = normalized_content.removeprefix("!addcmd ").split(":", 1)
                 if len(parts) == 2:
-                    name_and_keywords, message = parts
+                    name_and_keywords, _ = parts
+                    message = content.split(":", 1)[1]
                     # Split name and keywords (name is first word, rest are keywords)
                     name_keywords_parts = name_and_keywords.split(" ", 1)
                     if len(name_keywords_parts) == 2:
