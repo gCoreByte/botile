@@ -117,23 +117,15 @@ class TwitchBot:
                 self.send(user, channel, SCRIMS)
                 self.last_message_sent_at = current_time
                 return
-            result = await self.runes()
-            self.send(user, channel, result)
-            self.last_message_sent_at = current_time
+            asyncio.create_task(self._handle_runes(user, channel))
         elif normalized_content.startswith("!pros"):
             if self.scrims:
                 self.send(user, channel, SCRIMS)
                 self.last_message_sent_at = current_time
                 return
-            result = await self.pros()
-            if result is None:
-                result = NOT_IN_GAME
-            self.send(user, channel, result)
-            self.last_message_sent_at = current_time
+            asyncio.create_task(self._handle_pros(user, channel))
         elif normalized_content.startswith("!rank"):
-            result = await self.rank()
-            self.send(user, channel, result)
-            self.last_message_sent_at = current_time
+            asyncio.create_task(self._handle_rank(user, channel))
         elif normalized_content.startswith("!cutoff"):
             # result = await self.cutoff()
             result = "Currently disabled."
@@ -244,6 +236,36 @@ class TwitchBot:
                     self.previous_message = content.strip()
         if self.count == 4:
             self.send_without_mention(channel, self.previous_message)
+
+    # Helper methods for non-blocking command execution
+    async def _handle_runes(self, user: str, channel: str):
+        try:
+            result = await self.runes()
+            self.send(user, channel, result)
+            self.last_message_sent_at = time.time()
+        except Exception as e:
+            print(f"[Bot] Error in _handle_runes: {e}")
+            self.send(user, channel, f"Error: {e}")
+
+    async def _handle_pros(self, user: str, channel: str):
+        try:
+            result = await self.pros()
+            if result is None:
+                result = NOT_IN_GAME
+            self.send(user, channel, result)
+            self.last_message_sent_at = time.time()
+        except Exception as e:
+            print(f"[Bot] Error in _handle_pros: {e}")
+            self.send(user, channel, f"Error: {e}")
+
+    async def _handle_rank(self, user: str, channel: str):
+        try:
+            result = await self.rank()
+            self.send(user, channel, result)
+            self.last_message_sent_at = time.time()
+        except Exception as e:
+            print(f"[Bot] Error in _handle_rank: {e}")
+            self.send(user, channel, f"Error: {e}")
 
     # Move to own module
     async def runes(self):
