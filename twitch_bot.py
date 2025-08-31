@@ -113,6 +113,7 @@ class TwitchBot:
 
         # FIXME
         if normalized_content.startswith("!runes"):
+            return
             if self.scrims:
                 self.send(user, channel, SCRIMS)
                 self.last_message_sent_at = current_time
@@ -240,10 +241,10 @@ class TwitchBot:
 
     # Helper methods for non-blocking command execution
     async def _handle_runes(self, user: str, channel: str):
+        return
         try:
             # Riot broke it.
-            #result = await self.runes()
-            result = "Riot recently broke their API and rune data isnt available, surely they fix it soon :33"
+            result = await self.runes()
             self.send(user, channel, result)
             self.last_message_sent_at = time.time()
         except Exception as e:
