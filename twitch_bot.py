@@ -241,7 +241,9 @@ class TwitchBot:
     # Helper methods for non-blocking command execution
     async def _handle_runes(self, user: str, channel: str):
         try:
-            result = await self.runes()
+            # Riot broke it.
+            #result = await self.runes()
+            result = "Riot recently broke their API and rune data isnt available, surely they fix it soon :33"
             self.send(user, channel, result)
             self.last_message_sent_at = time.time()
         except Exception as e:
