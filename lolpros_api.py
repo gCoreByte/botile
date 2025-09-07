@@ -28,7 +28,7 @@ class LolprosApi:
 
     def _get_player_name(self, participant: {}, account: Account):
         if participant['riotId'].lower().strip() == account.full_name():
-            return "CGN Reptile"
+            return "reptile"
         return f"{self._dig(participant['lolpros'], 'team', 'tag')} {self._dig(participant['lolpros'], 'name')}".strip()
     
     def _get_role(self, participant: {}, account: Account):
