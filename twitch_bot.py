@@ -8,6 +8,7 @@ import re
 from riot_client import RiotClient
 from lolpros_api import LolprosApi
 from deeplol_api import DeepLolApi
+from dpm_api import DpmApi
 from db import Database, Account, Command
 
 ADMIN_USERS = ["reptile9lol", "gcorebyte", "k1mbo9lol"]
@@ -27,6 +28,7 @@ class TwitchBot:
         self.writer = None
         self.riot = None
         self.lolpros = None
+        self.dpm = None
         self.deeplol = None
         self.db = Database()
         self.count = 1
@@ -73,6 +75,7 @@ class TwitchBot:
             self.riot = RiotClient(session)
             self.lolpros = LolprosApi(session)
             self.deeplol = DeepLolApi(session)
+            self.dpm = DpmApi(session)
             while True:
                 line = await self.reader.readline()
                 if not line:
@@ -312,20 +315,28 @@ class TwitchBot:
         return ", ".join(full_names)
 
     async def pros(self):
+        account = await self._get_current_account()
+        if account is None:
+            return NOT_IN_GAME
+        result = await self.dpm.get_all_pro_names(account)
+        if result is not None:
+            return result
+        return 'something broke - pls ping core :3'
+
+    async def _get_current_account(self) -> Account | None:
         accounts = self.db.get_all_accounts()
         if len(accounts) == 0:
-            return "No accounts configured"
+            return None
         for acc in accounts:
             try:
-                result = await self.lolpros.get_all_pro_names(acc)
+                result = await self.riot.get_runes_for(acc)
                 if result is not None:
-                    return result
+                    return acc
             except Exception as e:
-                # Something went really wrong, log it and also give the error in twitch chat
-                # Probably best to remove it from twitch chat later
                 print(f"[Bot] Error: {e}")
-                return f"erm what did u do: {e}"
-        return NOT_IN_GAME
+                return None
+        return None
+        
 
     async def rank(self):
         accounts = self.db.get_all_accounts()
@@ -352,16 +363,12 @@ class TwitchBot:
                 
                 # If in game, set as current rank
                 if in_game is not None:
-                    current_rank = rank_result[0]
+                    return f"Current: {current_rank}"
             except Exception as e:
                 print(f"[Bot] Error: {e}")
                 return f"erm what did u do: {e}"
         if current_rank:
             return f"Current: {current_rank}"
-        return NOT_IN_GAME
-        #if current_rank:
-        #    return f"Highest: {highest_rank} | Current: {current_rank}"
-        #return highest_rank
     
     async def get_current_champion(self):
         accounts = self.db.get_all_accounts()
