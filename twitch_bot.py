@@ -73,6 +73,10 @@ class TwitchBot:
             self.riot = RiotClient(session)
             self.lolpros = LolprosApi(session, self.riot, self)
             self.deeplol = DeepLolApi(session)
+            
+            # Start the periodic cache refresh task
+            asyncio.create_task(self._periodic_cache_refresh())
+            
             while True:
                 line = await self.reader.readline()
                 if not line:
@@ -333,7 +337,25 @@ class TwitchBot:
                 print(f"[Bot] Error: {e}")
                 return None
         return None
-        
+
+    async def refresh_caches(self):
+        """Check if any account is in game and refresh lolpros cache if so"""
+        account = await self._get_current_account()
+        if account is None:
+            return
+        await self.lolpros._get_lolpros_data(account, None, None)
+        return  # Only refresh once per check
+
+    async def _periodic_cache_refresh(self):
+        """Run refresh_caches every minute"""
+        while True:
+            try:
+                await self.refresh_caches()
+            except Exception as e:
+                print(f"[Bot] Error in periodic cache refresh: {e}")
+            
+            # Wait 60 seconds before next check
+            await asyncio.sleep(60)
 
     async def rank(self):
         accounts = self.db.get_all_accounts()

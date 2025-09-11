@@ -26,7 +26,8 @@ class LolprosApi:
                 print("[LolprosApi] Successful cache hit")
                 return self.last_request_cache
             print("[LolprosApi] Cache miss. Fetching new data.")
-            self.twitchBot.send(user, channel, "Fetching data from Lolpros, this might take a bit...")
+            if user is not None and channel is not None:
+                self.twitchBot.send(user, channel, "Fetching data from Lolpros, this might take a bit...")
             headers = { "Accept": "application/json", "Host": "api.lolpros.gg", "Lpgg-Server": "EUW" }
             params = { "query": account.name, "tagline": account.tag }
             async with self.session.get(LOLPROS_API_URL, params=params, headers=headers) as resp:
