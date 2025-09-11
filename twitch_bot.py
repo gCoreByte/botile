@@ -8,7 +8,6 @@ import re
 from riot_client import RiotClient
 from lolpros_api import LolprosApi
 from deeplol_api import DeepLolApi
-from dpm_api import DpmApi
 from db import Database, Account, Command
 
 ADMIN_USERS = ["reptile9lol", "gcorebyte", "k1mbo9lol"]
@@ -28,7 +27,6 @@ class TwitchBot:
         self.writer = None
         self.riot = None
         self.lolpros = None
-        self.dpm = None
         self.deeplol = None
         self.db = Database()
         self.count = 1
@@ -73,9 +71,8 @@ class TwitchBot:
     async def listen(self):
         async with aiohttp.ClientSession() as session:
             self.riot = RiotClient(session)
-            self.lolpros = LolprosApi(session)
+            self.lolpros = LolprosApi(session, self.riot, self)
             self.deeplol = DeepLolApi(session)
-            self.dpm = DpmApi(session)
             while True:
                 line = await self.reader.readline()
                 if not line:
@@ -256,7 +253,7 @@ class TwitchBot:
 
     async def _handle_pros(self, user: str, channel: str):
         try:
-            result = await self.pros()
+            result = await self.pros(user, channel)
             if result is None:
                 result = NOT_IN_GAME
             self.send(user, channel, result)
@@ -314,11 +311,11 @@ class TwitchBot:
         full_names = [account.full_name() for account in accounts]
         return ", ".join(full_names)
 
-    async def pros(self):
+    async def pros(self, user, channel):
         account = await self._get_current_account()
         if account is None:
             return NOT_IN_GAME
-        result = await self.dpm.get_all_pro_names(account)
+        result = await self.lolpros.get_all_pro_names(account, user, channel)
         if result is not None:
             return result
         return 'something broke - pls ping core :3'

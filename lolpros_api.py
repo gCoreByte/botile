@@ -1,21 +1,40 @@
 import os
+import asyncio
 from champion_cache import ChampionCache
 from db import Account
 
 LOLPROS_API_URL = "https://api.lolpros.gg/lol/game"
 
 class LolprosApi:
-    def __init__(self, session):
+    def __init__(self, session, riotApi, twitchBot):
         self.session = session
+        self.twitchBot = twitchBot
         self.champion_cache = ChampionCache()
+        self.riotApi = riotApi
+        self.last_request_cache = None
+        self._request_semaphore = asyncio.Semaphore(1)  # Only allow 1 concurrent request
 
-    async def _get_lolpros_data(self, account: Account):
-        headers = { "Accept": "application/json", "Host": "api.lolpros.gg", "Lpgg-Server": "EUW" }
-        params = { "query": account.name, "tagline": account.tag }
-        async with self.session.get(LOLPROS_API_URL, params=params, headers=headers) as resp:
-            if resp.status == 200:
-                return await resp.json()
-        return None
+    async def _get_lolpros_data(self, account: Account, user: str, channel: str):
+        async with self._request_semaphore:
+            if self.last_request_cache is not None:
+                current_game = await self.riotApi.get_current_match(account.puuid)
+                if current_game is None:
+                    print("[LolprosApi] No current game found. Resetting cache.")
+                    self.last_request_cache = None
+                    return None
+            if self.last_request_cache is not None and current_game['gameId'] == self.last_request_cache['gameId']:
+                print("[LolprosApi] Successful cache hit")
+                return self.last_request_cache
+            print("[LolprosApi] Cache miss. Fetching new data.")
+            self.twitchBot.send(user, channel, "Fetching data from Lolpros, this might take a bit...")
+            headers = { "Accept": "application/json", "Host": "api.lolpros.gg", "Lpgg-Server": "EUW" }
+            params = { "query": account.name, "tagline": account.tag }
+            async with self.session.get(LOLPROS_API_URL, params=params, headers=headers) as resp:
+                if resp.status == 200:
+                    response = await resp.json()
+                    self.last_request_cache = response
+                    return response
+            return None
 
     def _dig(self, value, *keys):
         keys = list(keys)
@@ -47,8 +66,8 @@ class LolprosApi:
             return " | Bot"
         return ""
 
-    async def get_all_pro_names(self, account: Account):
-        data = await self._get_lolpros_data(account)
+    async def get_all_pro_names(self, account: Account, user: str, channel: str):
+        data = await self._get_lolpros_data(account, user, channel)
         if data is None:
             return None
 
