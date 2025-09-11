@@ -343,7 +343,9 @@ class TwitchBot:
         account = await self._get_current_account()
         if account is None:
             return
-        await self.lolpros._get_lolpros_data(account, None, None)
+        data, cache_updated = await self.lolpros._get_lolpros_data(account, None, None)
+        if cache_updated:
+            self.send_without_mention(os.getenv("TWITCH_CHANNEL"), await self.lolpros.get_all_pro_names(account, None, None))
 
     async def _periodic_cache_refresh(self):
         """Run refresh_caches every minute"""
