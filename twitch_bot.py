@@ -384,12 +384,14 @@ class TwitchBot:
                 
                 # If in game, set as current rank
                 if in_game is not None:
-                    return f"Current: {current_rank}"
+                    current_rank = rank_result[0]
             except Exception as e:
                 print(f"[Bot] Error: {e}")
                 return f"erm what did u do: {e}"
         if current_rank:
-            return f"Current: {current_rank}"
+            return f"{current_rank}"
+        else:
+            return f"{highest_rank}"
     
     async def get_current_champion(self):
         accounts = self.db.get_all_accounts()
