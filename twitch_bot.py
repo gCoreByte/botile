@@ -69,7 +69,7 @@ class TwitchBot:
         self._send(f"PRIVMSG {twitch_channel} :{message}")
 
     async def listen(self):
-        asyncio.create_task(self._periodic_cache_refresh())
+        #asyncio.create_task(self._periodic_cache_refresh())
 
         async with aiohttp.ClientSession() as session:
             print("[Bot] Running...")
@@ -114,28 +114,27 @@ class TwitchBot:
 
         if self.quiet and (not normalized_content.startswith("!") or not is_admin(user)):
             return
-
         # FIXME
         if normalized_content.startswith("!runes"):
             return
-            if self.scrims:
-                self.send(user, channel, SCRIMS)
-                self.last_message_sent_at = current_time
-                return
-            asyncio.create_task(self._handle_runes(user, channel))
-        elif normalized_content.startswith("!pros"):
-            if self.scrims:
-                self.send(user, channel, SCRIMS)
-                self.last_message_sent_at = current_time
-                return
-            asyncio.create_task(self._handle_pros(user, channel))
-        elif normalized_content.startswith("!rank"):
-            asyncio.create_task(self._handle_rank(user, channel))
-        elif normalized_content.startswith("!cutoff"):
-            # result = await self.cutoff()
-            result = "Currently disabled."
-            self.send(user, channel, result)
-            self.last_message_sent_at = current_time
+            # if self.scrims:
+            #     self.send(user, channel, SCRIMS)
+            #     self.last_message_sent_at = current_time
+            #     return
+            # asyncio.create_task(self._handle_runes(user, channel))
+        # elif normalized_content.startswith("!pros"):
+        #     if self.scrims:
+        #         self.send(user, channel, SCRIMS)
+        #         self.last_message_sent_at = current_time
+        #         return
+        #     asyncio.create_task(self._handle_pros(user, channel))
+        # elif normalized_content.startswith("!rank"):
+        #     asyncio.create_task(self._handle_rank(user, channel))
+        # elif normalized_content.startswith("!cutoff"):
+        #     # result = await self.cutoff()
+        #     result = "Currently disabled."
+        #     self.send(user, channel, result)
+        #     self.last_message_sent_at = current_time
         elif normalized_content.startswith("!wiki"):
             parts = normalized_content.removeprefix("!wiki ").split()
             result = f"https://wiki.leagueoflegends.com/en-us/{'_'.join(part.capitalize() for part in parts)}"
@@ -243,211 +242,213 @@ class TwitchBot:
         if self.count == 4:
             self.send_without_mention(channel, self.previous_message)
 
-    # Helper methods for non-blocking command execution
-    async def _handle_runes(self, user: str, channel: str):
-        return
-        try:
-            # Riot broke it.
-            result = await self.runes()
-            self.send(user, channel, result)
-            self.last_message_sent_at = time.time()
-        except Exception as e:
-            print(f"[Bot] Error in _handle_runes: {e}")
-            self.send(user, channel, f"Error: {e}")
+    # # Helper methods for non-blocking command execution
+    # async def _handle_runes(self, user: str, channel: str):
+    #     return
+    #     try:
+    #         # Riot broke it.
+    #         result = await self.runes()
+    #         self.send(user, channel, result)
+    #         self.last_message_sent_at = time.time()
+    #     except Exception as e:
+    #         print(f"[Bot] Error in _handle_runes: {e}")
+    #         self.send(user, channel, f"Error: {e}")
 
-    async def _handle_pros(self, user: str, channel: str):
-        try:
-            result = await self.pros(user, channel)
-            if result is None:
-                result = NOT_IN_GAME
-            self.send(user, channel, result)
-            self.last_message_sent_at = time.time()
-        except Exception as e:
-            print(f"[Bot] Error in _handle_pros: {e}")
-            self.send(user, channel, f"Error: {e}")
+    # async def _handle_pros(self, user: str, channel: str):
+    #     try:
+    #         result = await self.pros(user, channel)
+    #         if result is None:
+    #             result = NOT_IN_GAME
+    #         self.send(user, channel, result)
+    #         self.last_message_sent_at = time.time()
+    #     except Exception as e:
+    #         print(f"[Bot] Error in _handle_pros: {e}")
+    #         self.send(user, channel, f"Error: {e}")
 
-    async def _handle_rank(self, user: str, channel: str):
-        try:
-            result = await self.rank()
-            self.send(user, channel, result)
-            self.last_message_sent_at = time.time()
-        except Exception as e:
-            print(f"[Bot] Error in _handle_rank: {e}")
-            self.send(user, channel, f"Error: {e}")
+    # async def _handle_rank(self, user: str, channel: str):
+    #     try:
+    #         result = await self.rank()
+    #         self.send(user, channel, result)
+    #         self.last_message_sent_at = time.time()
+    #     except Exception as e:
+    #         print(f"[Bot] Error in _handle_rank: {e}")
+    #         self.send(user, channel, f"Error: {e}")
 
-    # Move to own module
-    async def runes(self):
-        accounts = self.db.get_all_accounts()
-        if len(accounts) == 0:
-            return "No accounts configured"
-        for account in accounts:
-            try:
-                result = await self.riot.get_runes_for(account)
-                if result is not None:
-                    return result
-            except Exception as e:
-                # Something went really wrong, log it and also give the error in twitch chat
-                # Probably best to remove it from twitch chat later
-                print(f"[Bot] Error: {e}")
-                return f"erm what did u do: {e}"
-        return NOT_IN_GAME
+    # # Move to own module
+    # async def runes(self):
+    #     accounts = self.db.get_all_accounts()
+    #     if len(accounts) == 0:
+    #         return "No accounts configured"
+    #     for account in accounts:
+    #         try:
+    #             result = await self.riot.get_runes_for(account)
+    #             if result is not None:
+    #                 return result
+    #         except Exception as e:
+    #             # Something went really wrong, log it and also give the error in twitch chat
+    #             # Probably best to remove it from twitch chat later
+    #             print(f"[Bot] Error: {e}")
+    #             return f"erm what did u do: {e}"
+    #     return NOT_IN_GAME
 
-    # Move these to their own module and add them to self.commands
-    async def add_account(self, name: str, tag: str):
-        account = self.db.get_account_by_name_and_tag(name, tag)
-        if account:
-            return f"Account {name}#{tag} already exists"
-        account = Account(name=name, tag=tag)
-        account.save()
-        return f"Added {name}#{tag} to the database"
+    # # Move these to their own module and add them to self.commands
+    # async def add_account(self, name: str, tag: str):
+    #     account = self.db.get_account_by_name_and_tag(name, tag)
+    #     if account:
+    #         return f"Account {name}#{tag} already exists"
+    #     account = Account(name=name, tag=tag)
+    #     account.save()
+    #     return f"Added {name}#{tag} to the database"
 
-    async def delete_account(self, name: str, tag: str):
-        account = self.db.get_account_by_name_and_tag(name, tag)
-        if account:
-            account.delete()
-            return f"Deleted {name}#{tag} from the database"
-        return f"Account {name}#{tag} not found"
+    # async def delete_account(self, name: str, tag: str):
+    #     account = self.db.get_account_by_name_and_tag(name, tag)
+    #     if account:
+    #         account.delete()
+    #         return f"Deleted {name}#{tag} from the database"
+    #     return f"Account {name}#{tag} not found"
 
-    async def accounts(self):
-        accounts = self.db.get_all_accounts()
-        if len(accounts) == 0:
-            return "No accounts configured"
-        full_names = [account.full_name() for account in accounts]
-        return ", ".join(full_names)
+    # async def accounts(self):
+    #     accounts = self.db.get_all_accounts()
+    #     if len(accounts) == 0:
+    #         return "No accounts configured"
+    #     full_names = [account.full_name() for account in accounts]
+    #     return ", ".join(full_names)
 
-    async def pros(self, user, channel):
-        account = await self._get_current_account()
-        if account is None:
-            return NOT_IN_GAME
-        result = await self.lolpros.get_all_pro_names(account, user, channel)
-        if result is not None:
-            return result
-        return 'something broke - pls ping core :3'
+    # async def pros(self, user, channel):
+    #     account = await self._get_current_account()
+    #     if account is None:
+    #         return NOT_IN_GAME
+    #     result = await self.lolpros.get_all_pro_names(account, user, channel)
+    #     if result is not None:
+    #         return result
+    #     return 'something broke - pls ping core :3'
 
-    async def _get_current_account(self) -> Account | None:
-        accounts = self.db.get_all_accounts()
-        if len(accounts) == 0:
-            return None
-        for acc in accounts:
-            try:
-                result = await self.riot.get_runes_for(acc)
-                if result is not None:
-                    return acc
-            except Exception as e:
-                print(f"[Bot] Error: {e}")
-                return None
-        return None
+    # async def _get_current_account(self) -> Account | None:
+    #     accounts = self.db.get_all_accounts()
+    #     if len(accounts) == 0:
+    #         return None
+    #     for acc in accounts:
+    #         try:
+    #             result = await self.riot.get_runes_for(acc)
+    #             if result is not None:
+    #                 return acc
+    #         except Exception as e:
+    #             print(f"[Bot] Error: {e}")
+    #             return None
+    #     return None
 
-    async def refresh_caches(self):
+    # async def refresh_caches(self):
         """Check if any account is in game and refresh lolpros cache if so"""
-        account = await self._get_current_account()
-        if account is None:
-            return
-        data, cache_updated = await self.lolpros._get_lolpros_data(account, None, None)
-        if cache_updated:
-            self.send_without_mention(os.getenv("TWITCH_CHANNEL"), await self.lolpros.get_all_pro_names(account, None, None))
+        # return
+        #account = await self._get_current_account()
+        #if account is None:
+        #    return
+        #data, cache_updated = await self.lolpros._get_lolpros_data(account, None, None)
+        #if cache_updated:
+        #    self.send_without_mention(os.getenv("TWITCH_CHANNEL"), await self.lolpros.get_all_pro_names(account, None, None))
 
-    async def _periodic_cache_refresh(self):
+    # async def _periodic_cache_refresh(self):
         """Run refresh_caches every minute"""
-        while True:
-            try:
-                print("[Bot] Refreshing caches...")
-                await self.refresh_caches()
-            except Exception as e:
-                print(f"[Bot] Error in periodic cache refresh: {e}")
-            
-            # Wait 60 seconds before next check
-            await asyncio.sleep(30)
+        #return
+        #while True:
+        #    try:
+        #        print("[Bot] Refreshing caches...")
+        #        await self.refresh_caches()
+        #    except Exception as e:
+        #        print(f"[Bot] Error in periodic cache refresh: {e}")
+        #    
+        #    # Wait 60 seconds before next check
+        #    await asyncio.sleep(30)
 
-    async def rank(self):
-        accounts = self.db.get_all_accounts()
-        if len(accounts) == 0:
-            return "No accounts configured"
+    # async def rank(self):
+    #     accounts = self.db.get_all_accounts()
+    #     if len(accounts) == 0:
+    #         return "No accounts configured"
         
-        highest_lp = 0
-        highest_rank = None
-        current_rank = None
+    #     highest_lp = 0
+    #     highest_rank = None
+    #     current_rank = None
         
-        # Check all accounts once for both in-game status and rank
-        for acc in accounts:
-            try:
-                # First check if in game
-                in_game = await self.riot.get_runes_for(acc)
-                rank_result = await self.riot.get_rank_for(acc)
-                if rank_result is None:
-                    continue
+    #     # Check all accounts once for both in-game status and rank
+    #     for acc in accounts:
+    #         try:
+    #             # First check if in game
+    #             in_game = await self.riot.get_runes_for(acc)
+    #             rank_result = await self.riot.get_rank_for(acc)
+    #             if rank_result is None:
+    #                 continue
                 
-                # Update highest LP if needed
-                if rank_result[1] > highest_lp:
-                    highest_lp = rank_result[1]
-                    highest_rank = rank_result[0]
+    #             # Update highest LP if needed
+    #             if rank_result[1] > highest_lp:
+    #                 highest_lp = rank_result[1]
+    #                 highest_rank = rank_result[0]
                 
-                # If in game, set as current rank
-                if in_game is not None:
-                    current_rank = rank_result[0]
-            except Exception as e:
-                print(f"[Bot] Error: {e}")
-                return f"erm what did u do: {e}"
-        if current_rank:
-            return f"{current_rank}"
-        else:
-            return f"{highest_rank}"
+    #             # If in game, set as current rank
+    #             if in_game is not None:
+    #                 current_rank = rank_result[0]
+    #         except Exception as e:
+    #             print(f"[Bot] Error: {e}")
+    #             return f"erm what did u do: {e}"
+    #     if current_rank:
+    #         return f"{current_rank}"
+    #     else:
+    #         return f"{highest_rank}"
     
-    async def get_current_champion(self):
-        accounts = self.db.get_all_accounts()
-        if len(accounts) == 0:
-            return "No accounts configured"
-        for acc in accounts:
-            try:
-                result = await self.riot.get_champion_for(acc)
-                if result is not None:
-                    return result
-            except Exception as e:
-                # Something went really wrong, log it and also give the error in twitch chat
-                # Probably best to remove it from twitch chat later
-                print(f"[Bot] Error: {e}")
-                return f"erm what did u do: {e}"
-        return None
+    # async def get_current_champion(self):
+    #     accounts = self.db.get_all_accounts()
+    #     if len(accounts) == 0:
+    #         return "No accounts configured"
+    #     for acc in accounts:
+    #         try:
+    #             result = await self.riot.get_champion_for(acc)
+    #             if result is not None:
+    #                 return result
+    #         except Exception as e:
+    #             # Something went really wrong, log it and also give the error in twitch chat
+    #             # Probably best to remove it from twitch chat later
+    #             print(f"[Bot] Error: {e}")
+    #             return f"erm what did u do: {e}"
+    #     return None
 
-    async def is_champion(self, champion_name: str):
-        current_champion = await self.get_current_champion()
-        return current_champion == champion_name
+    # async def is_champion(self, champion_name: str):
+    #     current_champion = await self.get_current_champion()
+    #     return current_champion == champion_name
     
-    async def cutoff(self):
-        data = await self.deeplol.get_cutoff_data()
-        if data is None:
-            return "Failed to get cutoff data"
+    # async def cutoff(self):
+    #     data = await self.deeplol.get_cutoff_data()
+    #     if data is None:
+    #         return "Failed to get cutoff data"
         
-        # Calculate time until 1:45 GMT+3 (22:45 UTC)
-        now_utc = time.gmtime()
-        target_hour = 22  # 1:45 GMT+3 = 22:45 UTC
-        target_minute = 45
+    #     # Calculate time until 1:45 GMT+3 (22:45 UTC)
+    #     now_utc = time.gmtime()
+    #     target_hour = 22  # 1:45 GMT+3 = 22:45 UTC
+    #     target_minute = 45
         
-        # Create target time for today in UTC
-        target_time = time.struct_time((
-            now_utc.tm_year, now_utc.tm_mon, now_utc.tm_mday,
-            target_hour, target_minute, 0,
-            now_utc.tm_wday, now_utc.tm_yday, now_utc.tm_isdst
-        ))
+    #     # Create target time for today in UTC
+    #     target_time = time.struct_time((
+    #         now_utc.tm_year, now_utc.tm_mon, now_utc.tm_mday,
+    #         target_hour, target_minute, 0,
+    #         now_utc.tm_wday, now_utc.tm_yday, now_utc.tm_isdst
+    #     ))
         
-        # Convert to seconds since epoch
-        now_seconds = time.mktime(now_utc)
-        target_seconds = time.mktime(target_time)
+    #     # Convert to seconds since epoch
+    #     now_seconds = time.mktime(now_utc)
+    #     target_seconds = time.mktime(target_time)
         
-        # If target time has passed today, add 24 hours
-        if target_seconds < now_seconds:
-            target_seconds += 24 * 3600
+    #     # If target time has passed today, add 24 hours
+    #     if target_seconds < now_seconds:
+    #         target_seconds += 24 * 3600
             
-        # Calculate remaining seconds
-        remaining_seconds = int(target_seconds - now_seconds)
+    #     # Calculate remaining seconds
+    #     remaining_seconds = int(target_seconds - now_seconds)
         
-        # Convert to HH:MM:SS
-        hours = remaining_seconds // 3600
-        minutes = (remaining_seconds % 3600) // 60
-        seconds = remaining_seconds % 60
-        time_to_update = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+    #     # Convert to HH:MM:SS
+    #     hours = remaining_seconds // 3600
+    #     minutes = (remaining_seconds % 3600) // 60
+    #     seconds = remaining_seconds % 60
+    #     time_to_update = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         
-        return f"Challenger: {data['challenger']}LP | Grandmaster: {data['grandmaster']}LP | Next update in {time_to_update}"
+    #     return f"Challenger: {data['challenger']}LP | Grandmaster: {data['grandmaster']}LP | Next update in {time_to_update}"
 
     # Keyword command management methods
     async def add_keyword_command(self, channel: str, name: str, keywords: list[str], message: str):
