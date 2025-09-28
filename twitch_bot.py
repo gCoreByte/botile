@@ -128,8 +128,8 @@ class TwitchBot:
         #         self.last_message_sent_at = current_time
         #         return
         #     asyncio.create_task(self._handle_pros(user, channel))
-        # elif normalized_content.startswith("!rank"):
-        #     asyncio.create_task(self._handle_rank(user, channel))
+        elif normalized_content.startswith("!rank"):
+            asyncio.create_task(self._handle_rank(user, channel))
         # elif normalized_content.startswith("!cutoff"):
         #     # result = await self.cutoff()
         #     result = "Currently disabled."
@@ -265,14 +265,14 @@ class TwitchBot:
     #         print(f"[Bot] Error in _handle_pros: {e}")
     #         self.send(user, channel, f"Error: {e}")
 
-    # async def _handle_rank(self, user: str, channel: str):
-    #     try:
-    #         result = await self.rank()
-    #         self.send(user, channel, result)
-    #         self.last_message_sent_at = time.time()
-    #     except Exception as e:
-    #         print(f"[Bot] Error in _handle_rank: {e}")
-    #         self.send(user, channel, f"Error: {e}")
+    async def _handle_rank(self, user: str, channel: str):
+        try:
+            result = await self.rank()
+            self.send(user, channel, result)
+            self.last_message_sent_at = time.time()
+        except Exception as e:
+            print(f"[Bot] Error in _handle_rank: {e}")
+            self.send(user, channel, f"Error: {e}")
 
     # # Move to own module
     # async def runes(self):
@@ -360,39 +360,39 @@ class TwitchBot:
         #    # Wait 60 seconds before next check
         #    await asyncio.sleep(30)
 
-    # async def rank(self):
-    #     accounts = self.db.get_all_accounts()
-    #     if len(accounts) == 0:
-    #         return "No accounts configured"
+    async def rank(self):
+        accounts = self.db.get_all_accounts()
+        if len(accounts) == 0:
+            return "No accounts configured"
         
-    #     highest_lp = 0
-    #     highest_rank = None
-    #     current_rank = None
+        highest_lp = 0
+        highest_rank = None
+        current_rank = None
         
-    #     # Check all accounts once for both in-game status and rank
-    #     for acc in accounts:
-    #         try:
-    #             # First check if in game
-    #             in_game = await self.riot.get_runes_for(acc)
-    #             rank_result = await self.riot.get_rank_for(acc)
-    #             if rank_result is None:
-    #                 continue
+        # Check all accounts once for both in-game status and rank
+        for acc in accounts:
+            try:
+                # First check if in game
+                in_game = await self.riot.get_runes_for(acc)
+                rank_result = await self.riot.get_rank_for(acc)
+                if rank_result is None:
+                    continue
                 
-    #             # Update highest LP if needed
-    #             if rank_result[1] > highest_lp:
-    #                 highest_lp = rank_result[1]
-    #                 highest_rank = rank_result[0]
+                # Update highest LP if needed
+                if rank_result[1] > highest_lp:
+                    highest_lp = rank_result[1]
+                    highest_rank = rank_result[0]
                 
-    #             # If in game, set as current rank
-    #             if in_game is not None:
-    #                 current_rank = rank_result[0]
-    #         except Exception as e:
-    #             print(f"[Bot] Error: {e}")
-    #             return f"erm what did u do: {e}"
-    #     if current_rank:
-    #         return f"{current_rank}"
-    #     else:
-    #         return f"{highest_rank}"
+                # If in game, set as current rank
+                if in_game is not None:
+                    current_rank = rank_result[0]
+            except Exception as e:
+                print(f"[Bot] Error: {e}")
+                return f"erm what did u do: {e}"
+        if current_rank:
+            return f"{current_rank}"
+        else:
+            return f"{highest_rank}"
     
     # async def get_current_champion(self):
     #     accounts = self.db.get_all_accounts()
